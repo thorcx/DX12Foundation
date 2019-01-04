@@ -1,6 +1,15 @@
 #include "../Public/BasicPlatformDebug.h"
-
+#include "../Public/BasicFileSystem.h"
 using namespace ThorCXLibrary;
+
+String BasicPlatformDebug::FormatAssertionFailedMessage(const ThorCXLibrary::Char* Message, const char* Function, const char* File, int Line)
+{
+	String FileName;
+	BasicFileSystem::SplitFilePath(File, nullptr, &FileName);
+	return ThorCXLibrary::FormatString("Debug assertion failed in ", Function, "(), file ", FileName, ", line", Line, ":\n", Message);
+
+}
+
 
 String BasicPlatformDebug::FormatDebugMessage(DebugMessageSeverity Severity,
 	const Char* Message,

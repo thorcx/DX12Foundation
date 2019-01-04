@@ -5,6 +5,7 @@
 #include "d3dApp.h"
 #include <WindowsX.h>
 #include "../ThorLib/ThorCommon/LogUtils.h"
+#include "../ThorLib/ThorCommon/DebugUtils.h"
 using Microsoft::WRL::ComPtr;
 using namespace std;
 using namespace DirectX;
@@ -427,9 +428,9 @@ bool D3DApp::InitDirect3D()
 }
 #endif
 	
-	LOG_INFO_MESSAGE("The App begin create d3d device" , " 20 MB");
+	HRESULT hr = CreateDXGIFactory1(IID_PPV_ARGS(&mdxgiFactory));
 
-	ThrowIfFailed(CreateDXGIFactory1(IID_PPV_ARGS(&mdxgiFactory)));
+	CHECK_D3D_RESULT_THROW(hr, "Failed to create DXGI factory");
 
 	// Try to create hardware device.
 	HRESULT hardwareResult = D3D12CreateDevice(
@@ -489,7 +490,14 @@ void D3DApp::CreateCommandObjects()
 	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
 	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-	ThrowIfFailed(md3dDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&mCommandQueue)));
+	
+
+	HRESULT hr = md3dDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&mCommandQueue));
+	CHECK_D3D_RESULT_THROW(hr, "Failed to Create Command queue!");
+
+	hr = mCommandQueue->SetName(L"Main Command Queue");
+
+	VERIFY_EXPR(SUCCEEDED(hr));
 
 	ThrowIfFailed(md3dDevice->CreateCommandAllocator(
 		D3D12_COMMAND_LIST_TYPE_DIRECT,

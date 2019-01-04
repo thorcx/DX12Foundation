@@ -28,6 +28,7 @@
 #include "d3dx12.h"
 #include "DDSTextureLoader.h"
 #include "MathHelper.h"
+#include "../ThorLib/ThorCommon/LogUtils.h"
 
 extern const int gNumFrameResources;
 
@@ -286,3 +287,68 @@ struct Texture
 #ifndef ReleaseCom
 #define ReleaseCom(x) { if(x){ x->Release(); x = 0; } }
 #endif
+
+
+//by thorcx
+
+namespace ThorCXLibrary
+{
+	//定义辅助Com错误输出小类
+	class ComErrorDesc
+	{
+	public:
+		ComErrorDesc(HRESULT hr)
+		{
+			FormatMessageA(
+				FORMAT_MESSAGE_FROM_SYSTEM |
+				FORMAT_MESSAGE_IGNORE_INSERTS,
+				NULL,
+				hr,
+				MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+				m_Msg,
+				_countof(m_Msg),
+				NULL);
+			auto nLen = strlen(m_Msg);
+			if (nLen > 1 && m_Msg[nLen - 1] == '\n')
+			{
+				m_Msg[nLen - 1] = 0;
+				if (m_Msg[nLen - 2] == '\r')
+				{
+					m_Msg[nLen - 2] = 0;
+				}
+			}
+		}
+
+		const char* Get() { return m_Msg; }
+
+	private:
+		char m_Msg[4096];
+	};
+
+}
+
+
+#define CHECK_D3D_RESULT_THROW(Expr, Message)\
+HRESULT _hr_ = Expr;	\
+if(FAILED(_hr_))		\
+{						\
+	ThorCXLibrary::ComErrorDesc ErrDesc(_hr_);	\
+	LOG_ERROR_AND_THROW(Message, "\nHRESULT Desc: ", ErrDesc.Get());\
+}
+
+#define CHECK_D3D_RESULT_THROW_EX(Expr, ...)		\
+HRESULT	_hr_ = Expr;								\
+if(FAILED(_hr_))									\
+{													\
+	auto msg = ThorCXLibrary::FormatString(__VA_ARGS__);\
+	ThorCXLibrary::ComErrorDesc ErrDesc(_hr_);							\
+	LOG_ERROR_AND_THROW(Message, "\nHRESULT Desc: ", ErrDesc.Get());\
+}
+
+#define LOG_D3D_ERROR(Expr, Message)		\
+HRESULT	_hr_ = Expr;						\
+if(FAILED(_hr_))							\
+{											\
+	ThorCXLibrary::ComErrorDesc	ErrDesc(_hr_);			\
+	LOG_ERROR_MESSAGE(Message, "\nHRESULT Desc: ", ErrDesc.Get());\
+}

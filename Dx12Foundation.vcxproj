@@ -152,10 +152,12 @@
     <ClInclude Include="Common\MathHelper.h" />
     <ClInclude Include="Common\UploadBuffer.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="ThorLib\Platforms\Basic\Public\BasicFileSystem.h" />
     <ClInclude Include="ThorLib\Platforms\Basic\Public\BasicPlatformDebug.h" />
     <ClInclude Include="ThorLib\Platforms\Win32\Win32Debug.h" />
     <ClInclude Include="ThorLib\ThorCommon\BasicTypes.h" />
     <ClInclude Include="ThorLib\ThorCommon\DebugOutput.h" />
+    <ClInclude Include="ThorLib\ThorCommon\DebugUtils.h" />
     <ClInclude Include="ThorLib\ThorCommon\FormatString.h" />
     <ClInclude Include="ThorLib\ThorCommon\LogUtils.h" />
   </ItemGroup>
@@ -168,6 +170,7 @@
     <ClCompile Include="Common\GameTimer.cpp" />
     <ClCompile Include="Common\GeometryGenerator.cpp" />
     <ClCompile Include="Common\MathHelper.cpp" />
+    <ClCompile Include="ThorLib\Platforms\Basic\Private\BasicFileSystem.cpp" />
     <ClCompile Include="ThorLib\Platforms\Basic\Private\BasicPlatformDebug.cpp" />
     <ClCompile Include="ThorLib\Platforms\Win32\Win32Debug.cpp" />
     <ClCompile Include="ThorLib\ThorCommon\DebugOutput.cpp" />
