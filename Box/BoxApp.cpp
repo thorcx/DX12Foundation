@@ -12,9 +12,14 @@
 #include "../Common/MathHelper.h"
 #include "../Common/UploadBuffer.h"
 
+
+
 using Microsoft::WRL::ComPtr;
 using namespace DirectX;
 using namespace DirectX::PackedVector;
+
+
+
 
 struct Vertex
 {
@@ -118,8 +123,8 @@ bool BoxApp::Initialize()
 		return false;
 		
     // Reset the command list to prep for initialization commands.
-    ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
- 
+    ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc, nullptr));
+	
     BuildDescriptorHeaps();
 	BuildConstantBuffers();
     BuildRootSignature();
@@ -129,7 +134,7 @@ bool BoxApp::Initialize()
 
     // Execute the initialization commands.
     ThrowIfFailed(mCommandList->Close());
-	ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
+	ID3D12CommandList* cmdsLists[] = { mCommandList };
 	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 
     // Wait until initialization is complete.
@@ -180,7 +185,7 @@ void BoxApp::Draw(const GameTimer& gt)
 
 	// A command list can be reset after it has been added to the command queue via ExecuteCommandList.
     // Reusing the command list reuses memory.
-    ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), mPSO.Get()));
+    ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc, mPSO.Get()));
 
     mCommandList->RSSetViewports(1, &mScreenViewport);
     mCommandList->RSSetScissorRects(1, &mScissorRect);
@@ -219,7 +224,7 @@ void BoxApp::Draw(const GameTimer& gt)
 	ThrowIfFailed(mCommandList->Close());
  
     // Add the command list to the queue for execution.
-	ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
+	ID3D12CommandList* cmdsLists[] = { mCommandList };
 	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 	
 	// swap the back and front buffers
@@ -290,7 +295,7 @@ void BoxApp::BuildDescriptorHeaps()
 
 void BoxApp::BuildConstantBuffers()
 {
-	mObjectCB = std::make_unique<UploadBuffer<ObjectConstants>>(md3dDevice.Get(), 1, true);
+	mObjectCB = std::make_unique<UploadBuffer<ObjectConstants>>(md3dDevice, 1, true);
 
 	UINT objCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectConstants));
 
@@ -414,11 +419,11 @@ void BoxApp::BuildBoxGeometry()
 	ThrowIfFailed(D3DCreateBlob(ibByteSize, &mBoxGeo->IndexBufferCPU));
 	CopyMemory(mBoxGeo->IndexBufferCPU->GetBufferPointer(), indices.data(), ibByteSize);
 
-	mBoxGeo->VertexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
-		mCommandList.Get(), vertices.data(), vbByteSize, mBoxGeo->VertexBufferUploader);
+	mBoxGeo->VertexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice,
+		mCommandList, vertices.data(), vbByteSize, mBoxGeo->VertexBufferUploader);
 
-	mBoxGeo->IndexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
-		mCommandList.Get(), indices.data(), ibByteSize, mBoxGeo->IndexBufferUploader);
+	mBoxGeo->IndexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice,
+		mCommandList, indices.data(), ibByteSize, mBoxGeo->IndexBufferUploader);
 
 	mBoxGeo->VertexByteStride = sizeof(Vertex);
 	mBoxGeo->VertexBufferByteSize = vbByteSize;

@@ -22,6 +22,21 @@
     <Filter Include="DXCommon\Private">
       <UniqueIdentifier>{5d158381-a67c-4c6a-8f0e-620dc6c1ae9c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ThorLib">
+      <UniqueIdentifier>{c5ed2b84-dd28-4909-b927-6010d5d3de64}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThorLib\ThorCommon">
+      <UniqueIdentifier>{c13f17b4-fc83-4653-8f1a-4cf4ece197ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThorLib\Platforms">
+      <UniqueIdentifier>{08618208-e755-4b6d-9a9f-3b25ffb2115d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThorLib\Platforms\Basic">
+      <UniqueIdentifier>{01195392-5fec-4aba-9938-bbcac0320e38}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThorLib\Platforms\Win32">
+      <UniqueIdentifier>{98ed3d82-0903-497b-b390-6f1d6e9a2052}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common\Camera.h">
@@ -51,6 +66,27 @@
     <ClInclude Include="Common\UploadBuffer.h">
       <Filter>DXCommon\Public</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ThorLib\ThorCommon\FormatString.h">
+      <Filter>ThorLib\ThorCommon</Filter>
+    </ClInclude>
+    <ClInclude Include="ThorLib\ThorCommon\LogUtils.h">
+      <Filter>ThorLib\ThorCommon</Filter>
+    </ClInclude>
+    <ClInclude Include="ThorLib\Platforms\Basic\Public\BasicPlatformDebug.h">
+      <Filter>ThorLib\Platforms\Basic</Filter>
+    </ClInclude>
+    <ClInclude Include="ThorLib\ThorCommon\DebugOutput.h">
+      <Filter>ThorLib\ThorCommon</Filter>
+    </ClInclude>
+    <ClInclude Include="ThorLib\ThorCommon\BasicTypes.h">
+      <Filter>ThorLib\ThorCommon</Filter>
+    </ClInclude>
+    <ClInclude Include="ThorLib\Platforms\Win32\Win32Debug.h">
+      <Filter>ThorLib\Platforms\Win32</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common\Camera.cpp">
@@ -77,5 +113,19 @@
     <ClCompile Include="Box\BoxApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ThorLib\ThorCommon\DebugOutput.cpp">
+      <Filter>ThorLib\ThorCommon</Filter>
+    </ClCompile>
+    <ClCompile Include="ThorLib\Platforms\Win32\Win32Debug.cpp">
+      <Filter>ThorLib\Platforms\Win32</Filter>
+    </ClCompile>
+    <ClCompile Include="ThorLib\Platforms\Basic\Private\BasicPlatformDebug.cpp">
+      <Filter>ThorLib\Platforms\Basic</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Dx12Foundation.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

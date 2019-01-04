@@ -4,7 +4,7 @@
 
 #include "d3dApp.h"
 #include <WindowsX.h>
-
+#include "../ThorLib/ThorCommon/LogUtils.h"
 using Microsoft::WRL::ComPtr;
 using namespace std;
 using namespace DirectX;
@@ -126,8 +126,8 @@ void D3DApp::CreateRtvAndDsvDescriptorHeaps()
     rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	rtvHeapDesc.NodeMask = 0;
     ThrowIfFailed(md3dDevice->CreateDescriptorHeap(
-        &rtvHeapDesc, IID_PPV_ARGS(mRtvHeap.GetAddressOf())));
-
+        &rtvHeapDesc, IID_PPV_ARGS(&mRtvHeap)));
+	
 
     D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc;
     dsvHeapDesc.NumDescriptors = 1;
@@ -135,7 +135,7 @@ void D3DApp::CreateRtvAndDsvDescriptorHeaps()
     dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	dsvHeapDesc.NodeMask = 0;
     ThrowIfFailed(md3dDevice->CreateDescriptorHeap(
-        &dsvHeapDesc, IID_PPV_ARGS(mDsvHeap.GetAddressOf())));
+        &dsvHeapDesc, IID_PPV_ARGS(&mDsvHeap)));
 }
 
 void D3DApp::OnResize()
@@ -147,13 +147,17 @@ void D3DApp::OnResize()
 	// Flush before changing any resources.
 	FlushCommandQueue();
 
-    ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
+    ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc, nullptr));
 
 	// Release the previous resources we will be recreating.
 	for (int i = 0; i < SwapChainBufferCount; ++i)
-		mSwapChainBuffer[i].Reset();
-    mDepthStencilBuffer.Reset();
+		mSwapChainBuffer[i].Release();
+    mDepthStencilBuffer.Release();
 	
+
+
+	
+
 	// Resize the swap chain.
     ThrowIfFailed(mSwapChain->ResizeBuffers(
 		SwapChainBufferCount, 
@@ -167,7 +171,7 @@ void D3DApp::OnResize()
 	for (UINT i = 0; i < SwapChainBufferCount; i++)
 	{
 		ThrowIfFailed(mSwapChain->GetBuffer(i, IID_PPV_ARGS(&mSwapChainBuffer[i])));
-		md3dDevice->CreateRenderTargetView(mSwapChainBuffer[i].Get(), nullptr, rtvHeapHandle);
+		md3dDevice->CreateRenderTargetView(mSwapChainBuffer[i], nullptr, rtvHeapHandle);
 		rtvHeapHandle.Offset(1, mRtvDescriptorSize);
 	}
 
@@ -202,7 +206,7 @@ void D3DApp::OnResize()
         &depthStencilDesc,
 		D3D12_RESOURCE_STATE_COMMON,
         &optClear,
-        IID_PPV_ARGS(mDepthStencilBuffer.GetAddressOf())));
+        IID_PPV_ARGS(&mDepthStencilBuffer)));
 
     // Create descriptor to mip level 0 of entire resource using the format of the resource.
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc;
@@ -210,15 +214,15 @@ void D3DApp::OnResize()
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 	dsvDesc.Format = mDepthStencilFormat;
 	dsvDesc.Texture2D.MipSlice = 0;
-    md3dDevice->CreateDepthStencilView(mDepthStencilBuffer.Get(), &dsvDesc, DepthStencilView());
+    md3dDevice->CreateDepthStencilView(mDepthStencilBuffer, &dsvDesc, DepthStencilView());
 
     // Transition the resource from its initial state to be used as a depth buffer.
-	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mDepthStencilBuffer.Get(),
+	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mDepthStencilBuffer,
 		D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE));
 	
     // Execute the resize commands.
     ThrowIfFailed(mCommandList->Close());
-    ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
+    ID3D12CommandList* cmdsLists[] = { mCommandList };
     mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 
 	// Wait until resize is complete.
@@ -422,6 +426,8 @@ bool D3DApp::InitDirect3D()
 	debugController->EnableDebugLayer();
 }
 #endif
+	
+	LOG_INFO_MESSAGE("The App begin create d3d device" , " 20 MB");
 
 	ThrowIfFailed(CreateDXGIFactory1(IID_PPV_ARGS(&mdxgiFactory)));
 
@@ -487,14 +493,14 @@ void D3DApp::CreateCommandObjects()
 
 	ThrowIfFailed(md3dDevice->CreateCommandAllocator(
 		D3D12_COMMAND_LIST_TYPE_DIRECT,
-		IID_PPV_ARGS(mDirectCmdListAlloc.GetAddressOf())));
+		IID_PPV_ARGS(&mDirectCmdListAlloc)));
 
 	ThrowIfFailed(md3dDevice->CreateCommandList(
 		0,
 		D3D12_COMMAND_LIST_TYPE_DIRECT,
-		mDirectCmdListAlloc.Get(), // Associated command allocator
+		mDirectCmdListAlloc, // Associated command allocator
 		nullptr,                   // Initial PipelineStateObject
-		IID_PPV_ARGS(mCommandList.GetAddressOf())));
+		IID_PPV_ARGS(&mCommandList)));
 
 	// Start off in a closed state.  This is because the first time we refer 
 	// to the command list we will Reset it, and it needs to be closed before
@@ -505,7 +511,7 @@ void D3DApp::CreateCommandObjects()
 void D3DApp::CreateSwapChain()
 {
     // Release the previous swapchain we will be recreating.
-    mSwapChain.Reset();
+    mSwapChain.Release();
 
     DXGI_SWAP_CHAIN_DESC sd;
     sd.BufferDesc.Width = mClientWidth;
@@ -526,9 +532,9 @@ void D3DApp::CreateSwapChain()
 
 	// Note: Swap chain uses queue to perform flush.
     ThrowIfFailed(mdxgiFactory->CreateSwapChain(
-		mCommandQueue.Get(),
+		mCommandQueue,
 		&sd, 
-		mSwapChain.GetAddressOf()));
+		&mSwapChain));
 }
 
 void D3DApp::FlushCommandQueue()
@@ -539,7 +545,7 @@ void D3DApp::FlushCommandQueue()
     // Add an instruction to the command queue to set a new fence point.  Because we 
 	// are on the GPU timeline, the new fence point won't be set until the GPU finishes
 	// processing all the commands prior to this Signal().
-    ThrowIfFailed(mCommandQueue->Signal(mFence.Get(), mCurrentFence));
+    ThrowIfFailed(mCommandQueue->Signal(mFence, mCurrentFence));
 
 	// Wait until the GPU has completed commands up to this fence point.
     if(mFence->GetCompletedValue() < mCurrentFence)
@@ -557,7 +563,7 @@ void D3DApp::FlushCommandQueue()
 
 ID3D12Resource* D3DApp::CurrentBackBuffer()const
 {
-	return mSwapChainBuffer[mCurrBackBuffer].Get();
+	return mSwapChainBuffer[mCurrBackBuffer];
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE D3DApp::CurrentBackBufferView()const
