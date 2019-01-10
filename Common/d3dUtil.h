@@ -25,6 +25,8 @@
 #include <fstream>
 #include <sstream>
 #include <cassert>
+#include <atlbase.h>
+#include <atlcom.h>
 #include "d3dx12.h"
 #include "DDSTextureLoader.h"
 #include "MathHelper.h"
@@ -113,16 +115,16 @@ public:
         return (byteSize + 255) & ~255;
     }
 
-    static Microsoft::WRL::ComPtr<ID3DBlob> LoadBinary(const std::wstring& filename);
+    static ATL::CComPtr<ID3DBlob> LoadBinary(const std::wstring& filename);
 
-    static Microsoft::WRL::ComPtr<ID3D12Resource> CreateDefaultBuffer(
+    static ATL::CComPtr<ID3D12Resource> CreateDefaultBuffer(
         ID3D12Device* device,
         ID3D12GraphicsCommandList* cmdList,
         const void* initData,
         UINT64 byteSize,
-        Microsoft::WRL::ComPtr<ID3D12Resource>& uploadBuffer);
+        ATL::CComPtr<ID3D12Resource>& uploadBuffer);
 
-	static Microsoft::WRL::ComPtr<ID3DBlob> CompileShader(
+	static ATL::CComPtr<ID3DBlob> CompileShader(
 		const std::wstring& filename,
 		const D3D_SHADER_MACRO* defines,
 		const std::string& entrypoint,
@@ -158,6 +160,11 @@ struct SubmeshGeometry
 	DirectX::BoundingBox Bounds;
 };
 
+struct XX1
+{
+	int a;
+};
+
 struct MeshGeometry
 {
 	// Give it a name so we can look it up by name.
@@ -165,18 +172,40 @@ struct MeshGeometry
 
 	// System memory copies.  Use Blobs because the vertex/index format can be generic.
 	// It is up to the client to cast appropriately.  
-	Microsoft::WRL::ComPtr<ID3DBlob> VertexBufferCPU = nullptr;
-	Microsoft::WRL::ComPtr<ID3DBlob> IndexBufferCPU  = nullptr;
+	ATL::CComPtr<ID3DBlob> VertexBufferCPU = nullptr;
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> VertexBufferGPU = nullptr;
-	Microsoft::WRL::ComPtr<ID3D12Resource> IndexBufferGPU = nullptr;
+	ATL::CComPtr<ID3DBlob> VB1CPU = nullptr;
+	ATL::CComPtr<ID3DBlob> VB2CPU = nullptr;
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> VertexBufferUploader = nullptr;
-	Microsoft::WRL::ComPtr<ID3D12Resource> IndexBufferUploader = nullptr;
+
+	ATL::CComPtr<ID3DBlob> IndexBufferCPU  = nullptr;
+
+	ATL::CComPtr<ID3D12Resource> VertexBufferGPU = nullptr;
+	
+	ATL::CComPtr<ID3D12Resource> VB1GPU = nullptr;
+	ATL::CComPtr<ID3D12Resource> VB2GPU = nullptr;
+	
+	ATL::CComPtr<ID3D12Resource> IndexBufferGPU = nullptr;
+
+	ATL::CComPtr<ID3D12Resource> VertexBufferUploader = nullptr;
+
+	ATL::CComPtr<ID3D12Resource> VB1Uploader = nullptr;
+	ATL::CComPtr<ID3D12Resource> VB2Uploader = nullptr;
+
+	ATL::CComPtr<ID3D12Resource> IndexBufferUploader = nullptr;
 
     // Data about the buffers.
 	UINT VertexByteStride = 0;
 	UINT VertexBufferByteSize = 0;
+
+	UINT VB1ByteStride = 0;
+	UINT VB1BufferByteSize = 0;
+	UINT VB2ByteStride = 0;
+	UINT VB2BufferByteSize = 0;
+
+	D3D12_VERTEX_BUFFER_VIEW  mVBV[2];
+	XX1 mxx[2];
+
 	DXGI_FORMAT IndexFormat = DXGI_FORMAT_R16_UINT;
 	UINT IndexBufferByteSize = 0;
 
@@ -194,6 +223,24 @@ struct MeshGeometry
 
 		return vbv;
 	}
+
+	D3D12_VERTEX_BUFFER_VIEW* VertexBufferView1()
+	{
+		
+		mVBV[0].BufferLocation = VB1GPU->GetGPUVirtualAddress();
+		mVBV[0].StrideInBytes = VB1ByteStride;
+		mVBV[0].SizeInBytes = VB1BufferByteSize;
+
+		mVBV[1].BufferLocation = VB2GPU->GetGPUVirtualAddress();
+		mVBV[1].StrideInBytes = VB2ByteStride;
+		mVBV[1].SizeInBytes = VB2BufferByteSize;
+
+		return mVBV;
+	}
+
+	
+
+
 
 	D3D12_INDEX_BUFFER_VIEW IndexBufferView()const
 	{
@@ -271,8 +318,8 @@ struct Texture
 
 	std::wstring Filename;
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> Resource = nullptr;
-	Microsoft::WRL::ComPtr<ID3D12Resource> UploadHeap = nullptr;
+	ATL::CComPtr<ID3D12Resource> Resource = nullptr;
+	ATL::CComPtr<ID3D12Resource> UploadHeap = nullptr;
 };
 
 #ifndef ThrowIfFailed

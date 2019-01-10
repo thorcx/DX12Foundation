@@ -1,4 +1,4 @@
-//***************************************************************************************
+﻿//***************************************************************************************
 // d3dApp.cpp by Frank Luna (C) 2015 All Rights Reserved.
 //***************************************************************************************
 
@@ -453,6 +453,9 @@ bool D3DApp::InitDirect3D()
 	ThrowIfFailed(md3dDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE,
 		IID_PPV_ARGS(&mFence)));
 
+	//这里不需要创建Vertexbuffer与indexbuffer的DescriptorHeap,直接创建对应的vertexview结构
+	//绑定Pipeline的时候使用对应的ID3D12GraphicsCommandList::IASetVertexBuffers函数，传入结构体
+	//descriptor的size是根据显卡厂商来的，所以这里先要查询size
 	mRtvDescriptorSize = md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	mDsvDescriptorSize = md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 	mCbvSrvUavDescriptorSize = md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -548,20 +551,20 @@ void D3DApp::CreateSwapChain()
 void D3DApp::FlushCommandQueue()
 {
 	// Advance the fence value to mark commands up to this fence point.
-    mCurrentFence++;
+    mCurrentFenceValue++;
 
     // Add an instruction to the command queue to set a new fence point.  Because we 
 	// are on the GPU timeline, the new fence point won't be set until the GPU finishes
 	// processing all the commands prior to this Signal().
-    ThrowIfFailed(mCommandQueue->Signal(mFence, mCurrentFence));
+    ThrowIfFailed(mCommandQueue->Signal(mFence, mCurrentFenceValue));
 
 	// Wait until the GPU has completed commands up to this fence point.
-    if(mFence->GetCompletedValue() < mCurrentFence)
+    if(mFence->GetCompletedValue() < mCurrentFenceValue)
 	{
 		HANDLE eventHandle = CreateEventEx(nullptr, false, false, EVENT_ALL_ACCESS);
 
         // Fire event when GPU hits current fence.  
-        ThrowIfFailed(mFence->SetEventOnCompletion(mCurrentFence, eventHandle));
+        ThrowIfFailed(mFence->SetEventOnCompletion(mCurrentFenceValue, eventHandle));
 
         // Wait until the GPU hits current fence event is fired.
 		WaitForSingleObject(eventHandle, INFINITE);

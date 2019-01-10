@@ -97,7 +97,7 @@ protected:
 	ATL::CComPtr<ID3D12Device> md3dDevice;
 
 	ATL::CComPtr<ID3D12Fence> mFence;
-    UINT64 mCurrentFence = 0;
+    UINT64 mCurrentFenceValue = 0;
 	
 	ATL::CComPtr<ID3D12CommandQueue> mCommandQueue;
 	ATL::CComPtr<ID3D12CommandAllocator> mDirectCmdListAlloc;

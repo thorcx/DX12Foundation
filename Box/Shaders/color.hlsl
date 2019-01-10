@@ -1,9 +1,12 @@
-//***************************************************************************************
+﻿//***************************************************************************************
 // color.hlsl by Frank Luna (C) 2015 All Rights Reserved.
 //
 // Transforms and colors geometry.
 //***************************************************************************************
-
+//constant buffer绑定b0-bn寄存器
+//Shader resource views绑定t0-tn
+//unordered access views绑定u0-un
+//texture samplers绑定s0-sn
 cbuffer cbPerObject : register(b0)
 {
 	float4x4 gWorldViewProj; 

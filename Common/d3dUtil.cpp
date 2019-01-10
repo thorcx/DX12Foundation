@@ -1,4 +1,4 @@
-
+﻿
 #include "d3dUtil.h"
 #include <comdef.h>
 #include <fstream>
@@ -18,7 +18,7 @@ bool d3dUtil::IsKeyDown(int vkeyCode)
     return (GetAsyncKeyState(vkeyCode) & 0x8000) != 0;
 }
 
-ComPtr<ID3DBlob> d3dUtil::LoadBinary(const std::wstring& filename)
+ATL::CComPtr<ID3DBlob> d3dUtil::LoadBinary(const std::wstring& filename)
 {
     std::ifstream fin(filename, std::ios::binary);
 
@@ -26,8 +26,8 @@ ComPtr<ID3DBlob> d3dUtil::LoadBinary(const std::wstring& filename)
     std::ifstream::pos_type size = (int)fin.tellg();
     fin.seekg(0, std::ios_base::beg);
 
-    ComPtr<ID3DBlob> blob;
-    ThrowIfFailed(D3DCreateBlob(size, blob.GetAddressOf()));
+    ATL::CComPtr<ID3DBlob> blob;
+    ThrowIfFailed(D3DCreateBlob(size, &blob));
 
     fin.read((char*)blob->GetBufferPointer(), size);
     fin.close();
@@ -35,14 +35,14 @@ ComPtr<ID3DBlob> d3dUtil::LoadBinary(const std::wstring& filename)
     return blob;
 }
 
-Microsoft::WRL::ComPtr<ID3D12Resource> d3dUtil::CreateDefaultBuffer(
+ATL::CComPtr<ID3D12Resource> d3dUtil::CreateDefaultBuffer(
     ID3D12Device* device,
     ID3D12GraphicsCommandList* cmdList,
     const void* initData,
     UINT64 byteSize,
-    Microsoft::WRL::ComPtr<ID3D12Resource>& uploadBuffer)
+    ATL::CComPtr<ID3D12Resource>& uploadBuffer)
 {
-    ComPtr<ID3D12Resource> defaultBuffer;
+    ATL::CComPtr<ID3D12Resource> defaultBuffer;
 
     // Create the actual default buffer resource.
     ThrowIfFailed(device->CreateCommittedResource(
@@ -51,7 +51,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> d3dUtil::CreateDefaultBuffer(
         &CD3DX12_RESOURCE_DESC::Buffer(byteSize),
 		D3D12_RESOURCE_STATE_COMMON,
         nullptr,
-        IID_PPV_ARGS(defaultBuffer.GetAddressOf())));
+        IID_PPV_ARGS(&defaultBuffer)));
 
     // In order to copy CPU memory data into our default buffer, we need to create
     // an intermediate upload heap. 
@@ -61,7 +61,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> d3dUtil::CreateDefaultBuffer(
         &CD3DX12_RESOURCE_DESC::Buffer(byteSize),
 		D3D12_RESOURCE_STATE_GENERIC_READ,
         nullptr,
-        IID_PPV_ARGS(uploadBuffer.GetAddressOf())));
+        IID_PPV_ARGS(&uploadBuffer)));
 
 
     // Describe the data we want to copy into the default buffer.
@@ -72,11 +72,16 @@ Microsoft::WRL::ComPtr<ID3D12Resource> d3dUtil::CreateDefaultBuffer(
 
     // Schedule to copy the data to the default buffer resource.  At a high level, the helper function UpdateSubresources
     // will copy the CPU memory into the intermediate upload heap.  Then, using ID3D12CommandList::CopySubresourceRegion,
-    // the intermediate upload heap data will be copied to mBuffer.
-	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(defaultBuffer.Get(), 
+    // the intermediate upload heap data will be copied to defaultBuffer.
+	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(defaultBuffer, 
 		D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST));
-    UpdateSubresources<1>(cmdList, defaultBuffer.Get(), uploadBuffer.Get(), 0, 0, 1, &subResourceData);
-	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(defaultBuffer.Get(),
+   
+	//这里使用了d3dx的辅助函数来做向Resource中拷贝vertex数据
+	//其内部使用了map与unmap，先向uploadBuffer中传输顶点数据，然后拷贝给defaultBuffer
+	UpdateSubresources<1>(cmdList, defaultBuffer, uploadBuffer, 0, 0, 1, &subResourceData);
+	
+	//将defaultBuffer的属性变回GPU只读
+	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(defaultBuffer,
 		D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ));
 
     // Note: uploadBuffer has to be kept alive after the above function calls because
@@ -87,7 +92,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> d3dUtil::CreateDefaultBuffer(
     return defaultBuffer;
 }
 
-ComPtr<ID3DBlob> d3dUtil::CompileShader(
+ATL::CComPtr<ID3DBlob> d3dUtil::CompileShader(
 	const std::wstring& filename,
 	const D3D_SHADER_MACRO* defines,
 	const std::string& entrypoint,
@@ -100,8 +105,8 @@ ComPtr<ID3DBlob> d3dUtil::CompileShader(
 
 	HRESULT hr = S_OK;
 
-	ComPtr<ID3DBlob> byteCode = nullptr;
-	ComPtr<ID3DBlob> errors;
+	ATL::CComPtr<ID3DBlob> byteCode = nullptr;
+	ATL::CComPtr<ID3DBlob> errors;
 	hr = D3DCompileFromFile(filename.c_str(), defines, D3D_COMPILE_STANDARD_FILE_INCLUDE,
 		entrypoint.c_str(), target.c_str(), compileFlags, 0, &byteCode, &errors);
 
