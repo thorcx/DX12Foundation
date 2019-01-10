@@ -37,6 +37,9 @@
     <Filter Include="ThorLib\Platforms\Win32">
       <UniqueIdentifier>{98ed3d82-0903-497b-b390-6f1d6e9a2052}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\BoxApp">
+      <UniqueIdentifier>{79980053-3c4c-49b1-a676-924445649214}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common\Camera.h">
@@ -93,6 +96,12 @@
     <ClInclude Include="ThorLib\Platforms\Basic\Public\BasicFileSystem.h">
       <Filter>ThorLib\Platforms\Basic</Filter>
     </ClInclude>
+    <ClInclude Include="Common\FrameResource.h">
+      <Filter>DXCommon\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Box\BoxApp.h">
+      <Filter>Source Files\BoxApp</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common\Camera.cpp">
@@ -116,9 +125,6 @@
     <ClCompile Include="Common\MathHelper.cpp">
       <Filter>DXCommon\Private</Filter>
     </ClCompile>
-    <ClCompile Include="Box\BoxApp.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ThorLib\ThorCommon\DebugOutput.cpp">
       <Filter>ThorLib\ThorCommon</Filter>
     </ClCompile>
@@ -130,6 +136,15 @@
     </ClCompile>
     <ClCompile Include="ThorLib\Platforms\Basic\Private\BasicFileSystem.cpp">
       <Filter>ThorLib\Platforms\Basic</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\FrameResource.cpp">
+      <Filter>DXCommon\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Box\BoxApp.cpp">
+      <Filter>Source Files\BoxApp</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
