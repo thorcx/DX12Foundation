@@ -41,10 +41,12 @@ struct VColorData
 	XMFLOAT4 Color;
 };
 
+//注意Constant buffer必须是256字节对齐的
 
 struct ObjectConstants
 {
     XMFLOAT4X4 WorldViewProj = MathHelper::Identity4x4();
+	float gTime;
 };
 
 class BoxApp : public D3DApp
@@ -190,6 +192,7 @@ void BoxApp::Update(const GameTimer& gt)
 	// Update the constant buffer with the latest worldViewProj matrix.
 	ObjectConstants objConstants;
     XMStoreFloat4x4(&objConstants.WorldViewProj, XMMatrixTranspose(worldViewProj));
+	objConstants.gTime = gt.TotalTime();
     mObjectCB->CopyData(0, objConstants);
 }
 
@@ -227,7 +230,7 @@ void BoxApp::Draw(const GameTimer& gt)
 	mCommandList->IASetVertexBuffers(0, 2, mBoxGeo->VertexBufferView1());
 
 	mCommandList->IASetIndexBuffer(&mBoxGeo->IndexBufferView());
-    mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+    mCommandList->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     
     mCommandList->SetGraphicsRootDescriptorTable(0, mCbvHeap->GetGPUDescriptorHandleForHeapStart());
 
@@ -413,16 +416,14 @@ void BoxApp::BuildBoxGeometry()
 		Vertex({ XMFLOAT3(+1.0f, -1.0f, +1.0f),XMFLOAT3(-1.0f, -1.0f, -1.0f),XMFLOAT3(-1.0f, -1.0f, -1.0f),XMFLOAT2(0.0f, 0.0f), XMFLOAT2(0.0f, 0.0f), XMCOLOR(Colors::Gray) })
     };
 
-	std::array<VPosData, 8> v1 =
+	std::array<VPosData, 5> v1 =
 	{
 		VPosData({XMFLOAT3(-1.0f, -1.0f, -1.0f)}),
-		VPosData({XMFLOAT3(-1.0f, +1.0f, -1.0f)}),
-		VPosData({XMFLOAT3(+1.0f, +1.0f, -1.0f)}),
-		VPosData({XMFLOAT3(+1.0f, -1.0f, -1.0f)}),
-		VPosData({XMFLOAT3(-1.0f, -1.0f, +1.0f)}),
-		VPosData({XMFLOAT3(-1.0f, +1.0f, +1.0f)}),
-		VPosData({XMFLOAT3(+1.0f, +1.0f, +1.0f)}),
-		VPosData({XMFLOAT3(+1.0f, -1.0f, +1.0f)})
+		VPosData({XMFLOAT3(-1.0f, -1.0f,  1.0f)}),
+		VPosData({XMFLOAT3(+1.0f, -1.0f,  1.0f)}),
+		VPosData({XMFLOAT3(+1.0f, -1.0f,  -1.0f)}),
+		
+		VPosData({XMFLOAT3( 0.0f,  1.0f,  0.0f)})
 
 	};
 
@@ -432,39 +433,46 @@ void BoxApp::BuildBoxGeometry()
 		VColorData({XMFLOAT4(Colors::Green)}),
 		VColorData({XMFLOAT4(Colors::Green)}),
 		VColorData({XMFLOAT4(Colors::Green)}),
-		VColorData({XMFLOAT4(Colors::Green)}),
-		VColorData({XMFLOAT4(Colors::Green)}),
-		VColorData({XMFLOAT4(Colors::Green)}),
-		VColorData({XMFLOAT4(Colors::Green)})
+		VColorData({XMFLOAT4(Colors::Red)})
 	};
 
-
-	std::array<std::uint16_t, 36> indices =
+	std::array<std::uint16_t, 18> indices =
 	{
-		// front face
-		0, 1, 2,
-		0, 2, 3,
-
-		// back face
-		4, 6, 5,
-		4, 7, 6,
-
-		// left face
-		4, 5, 1,
-		4, 1, 0,
-
-		// right face
-		3, 2, 6,
-		3, 6, 7,
-
-		// top face
-		1, 5, 6,
-		1, 6, 2,
-
-		// bottom face
-		4, 0, 3,
-		4, 3, 7
+		0,1,3,
+		1,2,3,
+		0,4,3,
+		0,1,4,
+		1,2,4,
+		3,4,2
 	};
+
+
+	//std::array<std::uint16_t, 36> indices =
+	//{
+	//	// front face
+	//	0, 1, 2,
+	//	0, 2, 3,
+
+	//	// back face
+	//	4, 6, 5,
+	//	4, 7, 6,
+
+	//	// left face
+	//	4, 5, 1,
+	//	4, 1, 0,
+
+	//	// right face
+	//	3, 2, 6,
+	//	3, 6, 7,
+
+	//	// top face
+	//	1, 5, 6,
+	//	1, 6, 2,
+
+	//	// bottom face
+	//	4, 0, 3,
+	//	4, 3, 7
+	//};
 
     const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
 	const UINT ibByteSize = (UINT)indices.size() * sizeof(std::uint16_t);
