@@ -2,6 +2,9 @@
 
 #include "d3dUtil.h"
 #include "UploadBuffer.h"
+#include <atlbase.h>
+#include <atlcom.h>
+
 
 struct ObjectConstants
 {
@@ -11,10 +14,11 @@ struct ObjectConstants
 
 struct PassConstans
 {
-	DirectX::XMFLOAT4X4	view	= MathHelper::Identity4x4();
+	DirectX::XMFLOAT4X4	View	= MathHelper::Identity4x4();
 	DirectX::XMFLOAT4X4 InvView = MathHelper::Identity4x4();
 	DirectX::XMFLOAT4X4 Proj	= MathHelper::Identity4x4();
-	DirectX::XMFLOAT4X4 viewProj = MathHelper::Identity4x4();
+	DirectX::XMFLOAT4X4 InvProj = MathHelper::Identity4x4();
+	DirectX::XMFLOAT4X4 ViewProj = MathHelper::Identity4x4();
 	DirectX::XMFLOAT4X4 InvViewProj = MathHelper::Identity4x4();
 	DirectX::XMFLOAT3	EyePosW = { 0.0f, 0.0f, 0.0f };
 	float cbPerObjectPad1 = 0.0f;
@@ -24,6 +28,12 @@ struct PassConstans
 	float FarZ = 0.0f;
 	float TotalTime = 0.0f;
 	float DeltaTime = 0.0f;
+};
+
+struct Vertex
+{
+	DirectX::XMFLOAT3 Pos;
+	DirectX::XMFLOAT4 Color;
 };
 
 struct FrameResource
@@ -38,7 +48,7 @@ public:
 	ATL::CComPtr<ID3D12CommandAllocator>			CmdListAlloc = nullptr;
 
 
-	std::unique_ptr<UploadBuffer<PassConstans>>		passCB = nullptr;
+	std::unique_ptr<UploadBuffer<PassConstans>>		PassCB = nullptr;
 	std::unique_ptr<UploadBuffer<ObjectConstants>>	ObjectCB = nullptr;
 
 	//设置一个Fence计数,标记当前GPU队列Command执行到计数器的位置,我们通过检查Fence的值来判断当前FrameResource是否

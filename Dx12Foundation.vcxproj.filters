@@ -40,6 +40,9 @@
     <Filter Include="Source Files\BoxApp">
       <UniqueIdentifier>{79980053-3c4c-49b1-a676-924445649214}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\ShapeApp">
+      <UniqueIdentifier>{a02bb5b2-637c-494f-9c5e-a1e76d669bed}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common\Camera.h">
@@ -102,6 +105,9 @@
     <ClInclude Include="Box\BoxApp.h">
       <Filter>Source Files\BoxApp</Filter>
     </ClInclude>
+    <ClInclude Include="Apps\ShapeApp\ShapeApp.h">
+      <Filter>Source Files\ShapeApp</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common\Camera.cpp">
@@ -145,6 +151,9 @@
     </ClCompile>
     <ClCompile Include="Box\BoxApp.cpp">
       <Filter>Source Files\BoxApp</Filter>
+    </ClCompile>
+    <ClCompile Include="Apps\ShapeApp\ShapeApp.cpp">
+      <Filter>Source Files\ShapeApp</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
