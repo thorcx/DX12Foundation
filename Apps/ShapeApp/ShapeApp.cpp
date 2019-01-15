@@ -44,7 +44,7 @@ bool ShapesApp::Initialize()
 
 	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc, nullptr));
 
-	BuildRootSignature();
+	BuildRootSignature1();
 	BuildShadersAndInputLayout();
 	BuildShapeGeometry();
 	BuildRenderItems();
@@ -217,7 +217,9 @@ void ShapesApp::UpdateCamera(const GameTimer& gt)
 	mEyePos.y = mRadius * cosf(mPhi);
 
 	XMVECTOR pos = XMVectorSet(mEyePos.x, mEyePos.y, mEyePos.z, 1.0f);
+	//目标点0,0,0
 	XMVECTOR target = XMVectorZero();
+	//向上方向向量
 	XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
 	XMMATRIX view = XMMatrixLookAtLH(pos, target, up);
@@ -229,15 +231,23 @@ void ShapesApp::UpdateObjectCBs(const GameTimer& gt)
 	auto currObjectCB = mCurrFrameResource->ObjectCB.get();
 	for (auto &e : mAllRitems)
 	{
+		//让所有物体向下降
+		XMMATRIX world = XMLoadFloat4x4(&e->World);
+		world = XMMatrixMultiply(world , XMMatrixTranslation(0.0f, -0.001f, 0.0f));
+		XMStoreFloat4x4(&e->World, world);
+		/*
 		if (e->NumFramesDirty > 0)
 		{
 			XMMATRIX world = XMLoadFloat4x4(&e->World);
 			ObjectConstants objConstans;
+			//这里需要transpose是因为在cpu内matrix是行主序的，也就是m[0][0], m[0][1]...
+			//但是在hlsl的matrix的定义是列主序，也就是m[0][0],m[1][0],所以需要传入shader前先转置一下
 			XMStoreFloat4x4(&objConstans.World, XMMatrixTranspose(world));
 
 			currObjectCB->CopyData(e->ObjCBIndex, objConstans);
 			e->NumFramesDirty--;
 		}
+		*/
 	}
 }
 
@@ -315,7 +325,7 @@ void ShapesApp::BuildConstantBufferViews()
 			cbvDesc.BufferLocation = cbAddress;
 			cbvDesc.SizeInBytes = objCBByteSize;
 
-			md3dDevice->CreateConstantBufferView(&cbvDesc, handle);
+		//	md3dDevice->CreateConstantBufferView(&cbvDesc, handle);
 		}
 	}
 
@@ -343,17 +353,18 @@ void ShapesApp::BuildRootSignature()
 	CD3DX12_DESCRIPTOR_RANGE cbvTable0;
 	cbvTable0.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 
-
+	D3D12_ROOT_DESCRIPTOR desc;
+	
 
 	CD3DX12_DESCRIPTOR_RANGE cbvTable1;
 	cbvTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
 
 	CD3DX12_ROOT_PARAMETER slotRootParameter[2];
-
+	
 	slotRootParameter[0].InitAsDescriptorTable(1, &cbvTable0);
 	slotRootParameter[1].InitAsDescriptorTable(1, &cbvTable1);
-
-	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(2, slotRootParameter, 0, nullptr,
+	
+	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(_countof(slotRootParameter), slotRootParameter, 0, nullptr,
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
 	CComPtr<ID3DBlob> serializedRootSig = nullptr;
@@ -377,6 +388,29 @@ void ShapesApp::BuildRootSignature()
 
 }
 
+//将Matrix的descriptorTable变成Constant parameter
+void ShapesApp::BuildRootSignature1()
+{
+	CD3DX12_DESCRIPTOR_RANGE cbvDescRange;
+	cbvDescRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1); //b1
+	CD3DX12_ROOT_PARAMETER rootParameters[2];
+	//注意Matrix包含16个32bit的Constans
+	rootParameters[0].InitAsConstants(sizeof(XMMATRIX)/4, 0); //b0 matrix
+	rootParameters[1].InitAsDescriptorTable(1, &cbvDescRange);
+
+	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(_countof(rootParameters), rootParameters, 0, nullptr,
+		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+
+	CComPtr<ID3DBlob> serializedRootSig = nullptr;
+	HRESULT hr = D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1,
+		&serializedRootSig, nullptr);
+	ThrowIfFailed(hr);
+	md3dDevice->CreateRootSignature(0,
+		serializedRootSig->GetBufferPointer(),
+		serializedRootSig->GetBufferSize(),
+		IID_PPV_ARGS(&mRootSignature));
+}
+
 void ShapesApp::BuildShadersAndInputLayout()
 {
 	mShaders["standardVS"] = d3dUtil::CompileShader(L"Apps\\ShapeApp\\ShapeShader.hlsl", nullptr, "VS", "vs_5_1");
@@ -392,7 +426,7 @@ void ShapesApp::BuildShadersAndInputLayout()
 void ShapesApp::BuildShapeGeometry()
 {
 	GeometryGenerator geoGen;
-	GeometryGenerator::MeshData box		= geoGen.CreateBox(1.5f, 0.5f, 1.5f, 3);
+	GeometryGenerator::MeshData box		= geoGen.CreateBox(1.0f, 1.0f, 1.0f, 1);
 	GeometryGenerator::MeshData grid = geoGen.CreateGrid(20.0f, 30.0f, 60, 40);
 	GeometryGenerator::MeshData sphere = geoGen.CreateSphere(0.5f, 20, 20);
 	GeometryGenerator::MeshData cylinder = geoGen.CreateCylinder(0.5f, 0.3f, 3.0f, 20, 20);
@@ -545,7 +579,7 @@ void ShapesApp::BuildFrameResources()
 void ShapesApp::BuildRenderItems()
 {
 	auto boxRitem = std::make_unique<RenderItem>();
-	XMStoreFloat4x4(&boxRitem->World, XMMatrixScaling(2.0f, 2.0f, 2.0f) * XMMatrixTranslation(0.0f, 0.5f, 0.0f));
+	XMStoreFloat4x4(&boxRitem->World,  XMMatrixTranslation(0.0f, 1.0f, 0.0f) );
 	boxRitem->ObjCBIndex = 0;
 	boxRitem->Geo = mGeometries["shapeGeo"].get();
 	boxRitem->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
@@ -634,12 +668,23 @@ void ShapesApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::v
 		cmdList->IASetVertexBuffers(0, 1, &ri->Geo->VertexBufferView());
 		cmdList->IASetIndexBuffer(&ri->Geo->IndexBufferView());
 		cmdList->IASetPrimitiveTopology(ri->PrimitiveType);
-
+		
 		UINT cbvIndex = mCurrFrameResourceIndex * (UINT)mOpaqueRitems.size() + ri->ObjCBIndex;
 		auto cbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(mCbvHeap->GetGPUDescriptorHandleForHeapStart());
 		cbvHandle.Offset(cbvIndex, mCbvSrvUavDescriptorSize);
+		
 
-		cmdList->SetGraphicsRootDescriptorTable(0, cbvHandle);
+		//add by thorcx
+		//注意采用直接设置Constant的方式，由此函数将内容上传到GPU,因此不需要使用CreateCommittedResource
+		//来预先在GPU留出内存空间
+		auto it = ritems[i];
+		XMMATRIX w = XMLoadFloat4x4(&it->World);
+		XMMATRIX wtrans = XMMatrixTranspose(w);
+		//直接设置RootConstant从CPU读取数据，传到GPU上
+		cmdList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &wtrans, 0);
+		
+		//这里不使用descriptorTable
+		//cmdList->SetGraphicsRootDescriptorTable(0, cbvHandle);
 		cmdList->DrawIndexedInstanced(ri->IndexCount, 1, ri->StartIndexLocation, ri->BaseVertexLocation, 0);
 	}
 }

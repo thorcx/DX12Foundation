@@ -33,6 +33,7 @@ private:
 	void BuildDescriptorHeaps();
 	void BuildConstantBufferViews();
 	void BuildRootSignature();
+	void BuildRootSignature1();
 	void BuildShadersAndInputLayout();
 	void BuildShapeGeometry();
 	void BuildPSOs();
