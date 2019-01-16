@@ -50,7 +50,8 @@ bool ShapesApp::Initialize()
 	BuildRenderItems();
 	BuildFrameResources();
 	BuildDescriptorHeaps();
-	BuildConstantBufferViews();
+	//BuildConstantBufferViews();
+	BuildPerPassConstViews();
 	BuildPSOs();
 
 
@@ -128,7 +129,8 @@ void ShapesApp::Draw(const GameTimer& gt)
 	//设置RootSignature
 	mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
 
-	//设置每个Pass的ConstantBuffer的DescriptorTable
+	//设置每个Pass的ConstantBuffer的DescriptorTable,前面在Build的过程中已经指定了View
+	//这里直接SetDescriptorTable，管线内部的状态就关联好了,GPU根据view关联的描述，来对指定内存做操作
 	int passCbvIndex = mPassCbvOffset + mCurrFrameResourceIndex;
 	auto passCbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(mCbvHeap->GetGPUDescriptorHandleForHeapStart());
 	passCbvHandle.Offset(passCbvIndex, mCbvSrvUavDescriptorSize);
@@ -284,10 +286,15 @@ void ShapesApp::BuildDescriptorHeaps()
 	UINT objCount = (UINT)mOpaqueRitems.size();
 
 	//每一个frameresource对应的objCount的constant buffer view描述符再加上每一个frameResource有一个prepass CBV
-	UINT numDescriptors = (objCount + 1) * gNumFrameResources;
+	//UINT numDescriptors = (objCount + 1) * gNumFrameResources;
 
 	//每个pass的CBV放到所有物体CBV之后
-	mPassCbvOffset = objCount * gNumFrameResources;
+	//mPassCbvOffset = objCount * gNumFrameResources;
+
+	//当直接使用RootConstant来传物体的世界位置矩阵的时候，我们不需要这个矩阵的DescriptorHeap
+	//改写一下这块代码只生成PerPass的
+	mPassCbvOffset = 0;
+	UINT numDescriptors = gNumFrameResources;
 
 	D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc;
 	cbvHeapDesc.NumDescriptors = numDescriptors;
@@ -345,6 +352,27 @@ void ShapesApp::BuildConstantBufferViews()
 		cbvDesc.SizeInBytes = passCBByteSize;
 
 		md3dDevice->CreateConstantBufferView(&cbvDesc, handle);
+	}
+}
+
+void ShapesApp::BuildPerPassConstViews()
+{
+	UINT passCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(PassConstans));
+	for (int frameIndex = 0; frameIndex < gNumFrameResources; ++frameIndex)
+	{
+		auto passCBResource = mFrameResources[frameIndex]->PassCB->Resource();
+
+		D3D12_GPU_VIRTUAL_ADDRESS cbAddress = passCBResource->GetGPUVirtualAddress();
+		int heapIndex = mPassCbvOffset + frameIndex;
+
+		auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(mCbvHeap->GetCPUDescriptorHandleForHeapStart());
+		handle.Offset(heapIndex, mCbvSrvUavDescriptorSize);
+
+		D3D12_CONSTANT_BUFFER_VIEW_DESC desc;
+		desc.BufferLocation = cbAddress;
+		desc.SizeInBytes = passCBByteSize;
+
+		md3dDevice->CreateConstantBufferView(&desc, handle);
 	}
 }
 
@@ -669,9 +697,6 @@ void ShapesApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::v
 		cmdList->IASetIndexBuffer(&ri->Geo->IndexBufferView());
 		cmdList->IASetPrimitiveTopology(ri->PrimitiveType);
 		
-		UINT cbvIndex = mCurrFrameResourceIndex * (UINT)mOpaqueRitems.size() + ri->ObjCBIndex;
-		auto cbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(mCbvHeap->GetGPUDescriptorHandleForHeapStart());
-		cbvHandle.Offset(cbvIndex, mCbvSrvUavDescriptorSize);
 		
 
 		//add by thorcx

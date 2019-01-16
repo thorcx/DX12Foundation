@@ -32,6 +32,8 @@ private:
 
 	void BuildDescriptorHeaps();
 	void BuildConstantBufferViews();
+	//只构建PerPass的ConstantView
+	void BuildPerPassConstViews();
 	void BuildRootSignature();
 	void BuildRootSignature1();
 	void BuildShadersAndInputLayout();
