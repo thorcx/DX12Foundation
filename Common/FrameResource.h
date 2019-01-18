@@ -12,6 +12,7 @@ struct ObjectConstants
 };
 
 
+
 struct PassConstans
 {
 	DirectX::XMFLOAT4X4	View	= MathHelper::Identity4x4();
@@ -33,7 +34,7 @@ struct PassConstans
 struct Vertex
 {
 	DirectX::XMFLOAT3 Pos;
-	DirectX::XMFLOAT4 Color;
+	DirectX::XMFLOAT4 Normal;
 };
 
 struct FrameResource
@@ -48,8 +49,9 @@ public:
 	ATL::CComPtr<ID3D12CommandAllocator>			CmdListAlloc = nullptr;
 
 
-	std::unique_ptr<UploadBuffer<PassConstans>>		PassCB = nullptr;
-	std::unique_ptr<UploadBuffer<ObjectConstants>>	ObjectCB = nullptr;
+	std::unique_ptr<UploadBuffer<PassConstans>>			PassCB = nullptr;
+	std::unique_ptr<UploadBuffer<ObjectConstants>>		ObjectCB = nullptr;
+	std::unique_ptr<UploadBuffer<MaterialConstants>>	MaterialCB = nullptr;
 
 	//设置一个Fence计数,标记当前GPU队列Command执行到计数器的位置,我们通过检查Fence的值来判断当前FrameResource是否
 	//已经被GPU执行完毕
