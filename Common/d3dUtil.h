@@ -213,6 +213,11 @@ struct MeshGeometry
 	}
 };
 
+
+//这里定义的格式要与HLSL中一致并且遵循HLSL的Pack rule
+//HLSL定义每4个Float组合为一个vector4d,如果不精心组织C++端的数据结构
+//在HLSL内会进行Padding,但是C++这端却不会，这样Memcpy的时候就会出问题
+//详见DX12龙书504页解释
 struct Light
 {
     DirectX::XMFLOAT3 Strength = { 0.5f, 0.5f, 0.5f };
@@ -260,7 +265,7 @@ struct Material
 	// Material constant buffer data used for shading.
 	DirectX::XMFLOAT4 DiffuseAlbedo = { 1.0f, 1.0f, 1.0f, 1.0f };
 	DirectX::XMFLOAT3 FresnelR0 = { 0.01f, 0.01f, 0.01f };
-	float Roughness = .25f;
+	float Roughness = 0.25f;
 	DirectX::XMFLOAT4X4 MatTransform = MathHelper::Identity4x4();
 };
 

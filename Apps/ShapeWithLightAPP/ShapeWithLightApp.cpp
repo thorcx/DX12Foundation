@@ -1,5 +1,9 @@
 #include "ShapeWithLightApp.h"
 
+#pragma comment(lib, "d3dcompiler.lib")
+#pragma comment(lib, "D3D12.lib")
+
+
 const int gNumFrameResources = 3;
 
 
@@ -45,14 +49,17 @@ bool ShapeWithLightApp::Initialize()
 		return false;
 
 	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc, nullptr));
+	
+	
 
 	BuildRootSignature();
-	BuildFrameResources();
-	BuildConstantBufferViews();
 	BuildShadersAndInputLayout();
+	//BuildConstantBufferViews();
 	BuildSkullGeometry();
 	BuildMaterials();
-	BuildPSOs();
+	BuildRenderItems();
+	BuildFrameResources();
+	BuildPSOT();
 
 	ThrowIfFailed(mCommandList->Close());
 	ID3D12CommandList* cmdsLists[] = { mCommandList };
@@ -85,6 +92,7 @@ void ShapeWithLightApp::Update(const GameTimer& gt)
 		CloseHandle(eventHandle);
 	}
 	UpdateObjectCBs(gt);
+	UpdateMaterialCBs(gt);
 	UpdateMainPassCB(gt);
 }
 
@@ -93,7 +101,9 @@ void ShapeWithLightApp::Draw(const GameTimer& gt)
 	auto cmdListAlloc = mCurrFrameResource->CmdListAlloc;
 
 	ThrowIfFailed(cmdListAlloc->Reset());
-	ThrowIfFailed(mCommandList->Reset(cmdListAlloc, mPSOs["opaque"]));
+	//ThrowIfFailed(mCommandList->Reset(cmdListAlloc, mPSOs["opaque"]));
+	ThrowIfFailed(mCommandList->Reset(cmdListAlloc, mOpaquePSO.Get()));
+
 
 	mCommandList->RSSetViewports(1, &mScreenViewport);
 	mCommandList->RSSetScissorRects(1, &mScissorRect);
@@ -104,14 +114,20 @@ void ShapeWithLightApp::Draw(const GameTimer& gt)
 	mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 	mCommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
 	
-	ID3D12DescriptorHeap *descriptorHeaps[] = { mCbvHeap };
-	mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
-	mCommandList->SetGraphicsRootSignature(mRootSignature);
+	/*ID3D12DescriptorHeap *descriptorHeaps[] = { mCbvHeap };
+	mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);*/
+	
+	//mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
+	mCommandList->SetGraphicsRootSignature(pTest);
 
-	int passCbvIndex = mPassCbvOffset + mCurrFrameResourceIndex;
+
+	/*int passCbvIndex = mPassCbvOffset + mCurrFrameResourceIndex;
 	auto passCbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(mCbvHeap->GetGPUDescriptorHandleForHeapStart());
 	passCbvHandle.Offset(passCbvIndex, mCbvSrvUavDescriptorSize);
 	mCommandList->SetGraphicsRootDescriptorTable(1, passCbvHandle);
+	*/
+	auto passCB = mCurrFrameResource->PassCB->Resource();
+	mCommandList->SetGraphicsRootConstantBufferView(2, passCB->GetGPUVirtualAddress());
 
 	DrawRenderItems(mCommandList, mOpaqueRitems);
 
@@ -242,7 +258,7 @@ void ShapeWithLightApp::UpdateMainPassCB(const GameTimer& gt)
 
 void ShapeWithLightApp::UpdateMaterialCBs(const GameTimer& gt)
 {
-	auto matBuffer = mCurrFrameResource->MaterialCB.get;
+	auto matBuffer = mCurrFrameResource->MaterialCB.get();
 	for (auto &e : mMaterials)
 	{
 		Material* mat = e.second.get();
@@ -285,7 +301,7 @@ void ShapeWithLightApp::BuildFrameResources()
 {
 	for (int i = 0; i < gNumFrameResources; ++i)
 	{
-		mFrameResources.push_back(std::make_unique<FrameResource>(md3dDevice, 1, mAllRitems.size()));
+		mFrameResources.push_back(std::make_unique<FrameResource>(md3dDevice, 1, static_cast<UINT>(mAllRitems.size()),(UINT)mMaterials.size()));
 	}
 }
 
@@ -297,7 +313,7 @@ void ShapeWithLightApp::BuildConstantBufferViews()
 	for (int i = 0; i < gNumFrameResources; ++i)
 	{
 		auto objGPUResource = mFrameResources[i]->ObjectCB->Resource();
-		for (int j = 0; j < objCount; ++j)
+		for (UINT j = 0; j < objCount; ++j)
 		{
 			auto objGPUVAddr = objGPUResource->GetGPUVirtualAddress();
 			objGPUVAddr += objByteSize * j;
@@ -354,7 +370,7 @@ void ShapeWithLightApp::BuildRootSignature()
 	slotRootParameter[0].InitAsConstantBufferView(0);
 	slotRootParameter[1].InitAsConstantBufferView(1);
 	slotRootParameter[2].InitAsConstantBufferView(2);
-
+	
 	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(3, slotRootParameter, 0, nullptr,
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
@@ -370,13 +386,19 @@ void ShapeWithLightApp::BuildRootSignature()
 	}
 	ThrowIfFailed(hr);
 
-	ThrowIfFailed(md3dDevice->CreateRootSignature(
-		0, 
+	/*ThrowIfFailed(md3dDevice->CreateRootSignature(
+		0,
 		serializedRootSig->GetBufferPointer(),
-		serializedRootSig->GetBufferSize(), 
-		IID_PPV_ARGS(&mRootSignature))
+		serializedRootSig->GetBufferSize(),
+		IID_PPV_ARGS(mRootSignature.GetAddressOf()))
+	);*/
+	ThrowIfFailed(md3dDevice->CreateRootSignature(
+		0,
+		serializedRootSig->GetBufferPointer(),
+		serializedRootSig->GetBufferSize(),
+		IID_PPV_ARGS(pTest.GetAddressOf()))
 	);
-
+	
 }
 
 void ShapeWithLightApp::BuildShadersAndInputLayout()
@@ -387,14 +409,14 @@ void ShapeWithLightApp::BuildShadersAndInputLayout()
 		NULL, NULL
 	};
 
-	mShaders["LightVS"] = d3dUtil::CompileShader(L"Apps\\ShapeWithLightApp\\ShapeLight.hlsl", nullptr, "VS", "vs_5_1");
-	mShaders["LightPS"] = d3dUtil::CompileShader(L"Apps\\ShapeWithLightApp\\ShapeLight.hlsl", nullptr, "PS", "ps_5_1");
+	mShaders["LightVS"] = d3dUtil::CompileShader(L"Apps\\ShapeWithLightApp\\MainLightPass.hlsl", nullptr, "VS", "vs_5_1");
+	mShaders["LightPS"] = d3dUtil::CompileShader(L"Apps\\ShapeWithLightApp\\MainLightPass.hlsl", nullptr, "PS", "ps_5_1");
 	
 	mInputLayout = 
 	{
 		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
 		{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0}
+		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},
 	};
 }	
 
@@ -443,10 +465,10 @@ void ShapeWithLightApp::BuildSkullGeometry()
 	auto skullGeo = std::make_unique<MeshGeometry>();
 	skullGeo->Name = "SkullGeo";
 
-	D3DCreateBlob(vbByteSize, &skullGeo->VertexBufferCPU);
+	ThrowIfFailed(D3DCreateBlob(vbByteSize, &skullGeo->VertexBufferCPU));
 	CopyMemory(skullGeo->VertexBufferCPU->GetBufferPointer(), vetices.data(), vbByteSize);
 
-	D3DCreateBlob(ibByteSize, &skullGeo->IndexBufferCPU);
+	ThrowIfFailed(D3DCreateBlob(ibByteSize, &skullGeo->IndexBufferCPU));
 	CopyMemory(skullGeo->IndexBufferCPU->GetBufferPointer(), indices.data(), ibByteSize);
 
 	skullGeo->VertexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice, mCommandList, vetices.data(), vbByteSize,
@@ -501,12 +523,50 @@ void ShapeWithLightApp::BuildMaterials()
 	skullMat->DiffuseSrvHeapIndex = 3;
 	skullMat->DiffuseAlbedo = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	skullMat->FresnelR0 = XMFLOAT3(0.05f, 0.05f, 0.05);
-	skullMat->Roughness = 0.3f;
+	skullMat->Roughness = 0.1f;
 
-	mMaterials["Bricks0"] = std::move(bricks0);
-	mMaterials["Stone0"] = std::move(stone0);
-	mMaterials["Tile0"] = std::move(tile0);
-	mMaterials["SkullMat"] = std::move(skullMat);
+	mMaterials["bricks0"] = std::move(bricks0);
+	mMaterials["stone0"] = std::move(stone0);
+	mMaterials["tile0"] = std::move(tile0);
+	mMaterials["skullMat"] = std::move(skullMat);
+}
+
+void ShapeWithLightApp::BuildPSOT()
+{
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC opaquePsoDesc;
+
+	//
+	// PSO for opaque objects.
+	//
+	ZeroMemory(&opaquePsoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
+	opaquePsoDesc.InputLayout = { mInputLayout.data(), (UINT)mInputLayout.size() };
+	//opaquePsoDesc.pRootSignature = mRootSignature.Get();
+
+	opaquePsoDesc.pRootSignature = pTest;
+
+	BYTE *t = reinterpret_cast<BYTE*>(mShaders["LightVS"]->GetBufferPointer());
+
+	opaquePsoDesc.VS =
+	{
+		reinterpret_cast<BYTE*>(mShaders["LightVS"]->GetBufferPointer()),
+		mShaders["LightVS"]->GetBufferSize()
+	};
+	opaquePsoDesc.PS =
+	{
+		reinterpret_cast<BYTE*>(mShaders["LightPS"]->GetBufferPointer()),
+		mShaders["LightPS"]->GetBufferSize()
+	};
+	opaquePsoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	opaquePsoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	opaquePsoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	opaquePsoDesc.SampleMask = UINT_MAX;
+	opaquePsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	opaquePsoDesc.NumRenderTargets = 1;
+	opaquePsoDesc.RTVFormats[0] = mBackBufferFormat;
+	opaquePsoDesc.SampleDesc.Count = m4xMsaaState ? 4 : 1;
+	opaquePsoDesc.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
+	opaquePsoDesc.DSVFormat = mDepthStencilFormat;
+	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(&mOpaquePSO)));
 }
 
 void ShapeWithLightApp::BuildPSOs()
@@ -514,7 +574,10 @@ void ShapeWithLightApp::BuildPSOs()
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC opaquePsoDesc;
 	ZeroMemory(&opaquePsoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
 	opaquePsoDesc.InputLayout = { mInputLayout.data(), (UINT)mInputLayout.size() };
-	opaquePsoDesc.pRootSignature = mRootSignature;
+	//opaquePsoDesc.pRootSignature = mRootSignature.Get();
+	opaquePsoDesc.pRootSignature = pTest;
+
+
 	opaquePsoDesc.VS = 
 	{
 		reinterpret_cast<BYTE*>(mShaders["LightVS"]->GetBufferPointer()),
@@ -535,7 +598,12 @@ void ShapeWithLightApp::BuildPSOs()
 	opaquePsoDesc.SampleDesc.Count = m4xMsaaState ? 4 : 1;
 	opaquePsoDesc.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
 	opaquePsoDesc.DSVFormat = mDepthStencilFormat;
-	md3dDevice->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(&mPSOs["opaque"]));
+
+	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(&mOpaquePSO)));
+	//ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(&mOpaquePSO)));
+
+	//ATL::CComPtr<ID3D12PipelineState> xx = mPSOs["opaque"];
+	//md3dDevice->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(&mPSOs["opaque"]));
 }
 
 void ShapeWithLightApp::BuildRenderItems()
@@ -545,13 +613,16 @@ void ShapeWithLightApp::BuildRenderItems()
 	
 	skullRitem->TexTransform		= MathHelper::Identity4x4();
 	skullRitem->ObjCBIndex			= 0;
-	skullRitem->Mat					= mMaterials["SkullMat"].get();
+	skullRitem->Mat					= mMaterials["skullMat"].get();
 	skullRitem->Geo					= mGeometries["SkullGeo"].get();
 	skullRitem->PrimitiveType		= D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 	skullRitem->IndexCount			= skullRitem->Geo->DrawArgs["skull"].IndexCount;
 	skullRitem->StartIndexLocation  = skullRitem->Geo->DrawArgs["skull"].StartIndexLocation;
 	skullRitem->BaseVerTexLocation = skullRitem->Geo->DrawArgs["skull"].BaseVertexLocation;
 	mAllRitems.push_back(std::move(skullRitem));
+
+	for (auto &e : mAllRitems)
+		mOpaqueRitems.push_back(e.get());
 }
 
 void ShapeWithLightApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems)

@@ -11,6 +11,7 @@
 
 #include "d3dUtil.h"
 #include "GameTimer.h"
+#include "../ThorLib/Pointer/TxRefPtr.h"
 
 // Link necessary d3d12 libraries.
 #pragma comment(lib,"d3dcompiler.lib")
@@ -92,24 +93,39 @@ protected:
 	// Used to keep track of the delta-time and game time (4.4).
 	GameTimer mTimer;
 	
-    ATL::CComPtr<IDXGIFactory4> mdxgiFactory;
-	ATL::CComPtr<IDXGISwapChain> mSwapChain;
-	ATL::CComPtr<ID3D12Device> md3dDevice;
+	ThorcxLib::TRefCountPtr<IDXGIFactory4>		mdxgiFactory;
+	ThorcxLib::TRefCountPtr<IDXGISwapChain>		mSwapChain;
+	//Microsoft::WRL::ComPtr<IDXGIFactory4> mdxgiFactory;
+	//Microsoft::WRL::ComPtr<IDXGISwapChain> mSwapChain;
 
-	ATL::CComPtr<ID3D12Fence> mFence;
+	ThorcxLib::TRefCountPtr<ID3D12Device> md3dDevice;
+	//Microsoft::WRL::ComPtr<ID3D12Device> md3dDevice;
+
+	ThorcxLib::TRefCountPtr<ID3D12Fence> mFence;
+	//Microsoft::WRL::ComPtr<ID3D12Fence> mFence;
+
     UINT64 mCurrentFence = 0;
 	
-	ATL::CComPtr<ID3D12CommandQueue> mCommandQueue;
-	ATL::CComPtr<ID3D12CommandAllocator> mDirectCmdListAlloc;
-	ATL::CComPtr<ID3D12GraphicsCommandList> mCommandList;
+	ThorcxLib::TRefCountPtr<ID3D12CommandQueue>				mCommandQueue;
+	ThorcxLib::TRefCountPtr<ID3D12CommandAllocator>			mDirectCmdListAlloc;
+	ThorcxLib::TRefCountPtr<ID3D12GraphicsCommandList>		mCommandList;
+	//Microsoft::WRL::ComPtr<ID3D12CommandQueue> mCommandQueue;
+	//Microsoft::WRL::ComPtr<ID3D12CommandAllocator> mDirectCmdListAlloc;
+	//Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> mCommandList;
 
 	static const int SwapChainBufferCount = 2;
 	int mCurrBackBuffer = 0;
-	ATL::CComPtr<ID3D12Resource> mSwapChainBuffer[SwapChainBufferCount];
-	ATL::CComPtr<ID3D12Resource> mDepthStencilBuffer;
+	
+	ThorcxLib::TRefCountPtr<ID3D12Resource> mSwapChainBuffer[SwapChainBufferCount];
+	ThorcxLib::TRefCountPtr<ID3D12Resource> mDepthStencilBuffer;
+	//Microsoft::WRL::ComPtr<ID3D12Resource> mSwapChainBuffer[SwapChainBufferCount];
+	//Microsoft::WRL::ComPtr<ID3D12Resource> mDepthStencilBuffer;
 
-	ATL::CComPtr<ID3D12DescriptorHeap> mRtvHeap;
-	ATL::CComPtr<ID3D12DescriptorHeap> mDsvHeap;
+	ThorcxLib::TRefCountPtr<ID3D12DescriptorHeap> mRtvHeap;
+	ThorcxLib::TRefCountPtr<ID3D12DescriptorHeap> mDsvHeap;
+
+	//Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mRtvHeap;
+	//Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mDsvHeap;
 
     D3D12_VIEWPORT mScreenViewport; 
     D3D12_RECT mScissorRect;

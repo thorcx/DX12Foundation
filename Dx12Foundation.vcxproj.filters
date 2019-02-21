@@ -49,6 +49,9 @@
     <Filter Include="Source Files\ShapeWithLightApp\Shaders">
       <UniqueIdentifier>{439eaf38-f50f-49bd-ba8c-93b996d2a669}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ThorLib\Pointer">
+      <UniqueIdentifier>{b20e1e37-8d02-4ed4-b2fc-f8b709c238b1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common\Camera.h">
@@ -108,14 +111,11 @@
     <ClInclude Include="Common\FrameResource.h">
       <Filter>DXCommon\Public</Filter>
     </ClInclude>
-    <ClInclude Include="Box\BoxApp.h">
-      <Filter>Source Files\BoxApp</Filter>
-    </ClInclude>
-    <ClInclude Include="Apps\ShapeApp\ShapeApp.h">
-      <Filter>Source Files\ShapeApp</Filter>
-    </ClInclude>
     <ClInclude Include="Apps\ShapeWithLightAPP\ShapeWithLightApp.h">
       <Filter>Source Files\ShapeWithLightApp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThorLib\Pointer\TxRefPtr.h">
+      <Filter>ThorLib\Pointer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -158,12 +158,6 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Box\BoxApp.cpp">
-      <Filter>Source Files\BoxApp</Filter>
-    </ClCompile>
-    <ClCompile Include="Apps\ShapeApp\ShapeApp.cpp">
-      <Filter>Source Files\ShapeApp</Filter>
-    </ClCompile>
     <ClCompile Include="Apps\ShapeWithLightAPP\ShapeWithLightApp.cpp">
       <Filter>Source Files\ShapeWithLightApp</Filter>
     </ClCompile>
@@ -172,10 +166,5 @@
     <ResourceCompile Include="Dx12Foundation.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="Apps\ShapeWithLightAPP\LightingUtil.hlsl">
-      <Filter>Source Files\ShapeWithLightApp\Shaders</Filter>
-    </FxCompile>
   </ItemGroup>
 </Project>

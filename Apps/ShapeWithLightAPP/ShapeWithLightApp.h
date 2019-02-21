@@ -1,7 +1,9 @@
 #pragma once
 #pragma once
+
 #include "../../Common/d3dApp.h"
 #include "../../Common/FrameResource.h"
+#include "../../ThorLib/Pointer/TxRefPtr.h"
 
 extern const int gNumFrameResources;
 
@@ -44,6 +46,7 @@ private:
 
 	void BuildMaterials();
 	void BuildPSOs();
+	void BuildPSOT();
 	void BuildRenderItems();
 	void DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems);
 
@@ -53,7 +56,14 @@ private:
 	FrameResource* mCurrFrameResource = nullptr;
 	int mCurrFrameResourceIndex = 0;
 
-	ATL::CComPtr<ID3D12RootSignature>		mRootSignature = nullptr;
+	//TRefCountPtr<ID3D12RootSignature> mRootSignature = N
+
+	ThorcxLib::TRefCountPtr<ID3D12RootSignature> pTest = nullptr;
+	
+
+
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
+	//ATL::CComPtr<ID3D12RootSignature>		mRootSignature = nullptr;
 	ATL::CComPtr<ID3D12DescriptorHeap>	mCbvHeap = nullptr;
 	ATL::CComPtr<ID3D12DescriptorHeap>	mSrvDescriptorHeap = nullptr;
 
@@ -62,6 +72,10 @@ private:
 	std::unordered_map<std::string, std::unique_ptr<Material>>					mMaterials;
 
 	std::unordered_map<std::string,ATL::CComPtr<ID3D12PipelineState>> mPSOs;
+
+	//ATL::CComPtr<ID3D12PipelineState>	mOpaquePSO = nullptr;
+
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> mOpaquePSO = nullptr;
 
 	std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout;
 
@@ -84,6 +98,8 @@ private:
 	float mRadius = 15.0f;
 
 	POINT	mLastMousePos;
+
+	
 
 };
 

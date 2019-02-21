@@ -145,9 +145,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Apps\ShapeApp\ShapeApp.h" />
     <ClInclude Include="Apps\ShapeWithLightAPP\ShapeWithLightApp.h" />
-    <ClInclude Include="Box\BoxApp.h" />
     <ClInclude Include="Common\Camera.h" />
     <ClInclude Include="Common\d3dApp.h" />
     <ClInclude Include="Common\d3dUtil.h" />
@@ -162,6 +160,7 @@
     <ClInclude Include="ThorLib\Platforms\Basic\Public\BasicFileSystem.h" />
     <ClInclude Include="ThorLib\Platforms\Basic\Public\BasicPlatformDebug.h" />
     <ClInclude Include="ThorLib\Platforms\Win32\Win32Debug.h" />
+    <ClInclude Include="ThorLib\Pointer\TxRefPtr.h" />
     <ClInclude Include="ThorLib\ThorCommon\BasicTypes.h" />
     <ClInclude Include="ThorLib\ThorCommon\DebugOutput.h" />
     <ClInclude Include="ThorLib\ThorCommon\DebugUtils.h" />
@@ -169,9 +168,7 @@
     <ClInclude Include="ThorLib\ThorCommon\LogUtils.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Apps\ShapeApp\ShapeApp.cpp" />
     <ClCompile Include="Apps\ShapeWithLightAPP\ShapeWithLightApp.cpp" />
-    <ClCompile Include="Box\BoxApp.cpp" />
     <ClCompile Include="Common\Camera.cpp" />
     <ClCompile Include="Common\d3dApp.cpp" />
     <ClCompile Include="Common\d3dUtil.cpp" />
@@ -188,18 +185,6 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Dx12Foundation.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="Apps\ShapeWithLightAPP\LightingUtil.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
-    </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

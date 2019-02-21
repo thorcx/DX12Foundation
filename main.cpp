@@ -1,5 +1,6 @@
-#include "Apps/ShapeApp/ShapeApp.h"
+//#include "Apps/ShapeApp/ShapeApp.h"
 
+#include "Apps/ShapeWithLightApp/ShapeWithLightApp.h"
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance,
 	PSTR cmdLine, int showCmd)
@@ -11,7 +12,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance,
 
 	try
 	{
-		ShapesApp theApp(hInstance);
+		//ShapesApp theApp(hInstance);
+		ShapeWithLightApp theApp(hInstance);
 		if (!theApp.Initialize())
 			return 0;
 

@@ -3,7 +3,7 @@
 
 using namespace DirectX;
 
-const int gNumFrameResources = 3;
+//const int gNumFrameResources = 3;
 
 struct RenderItem
 {
@@ -133,7 +133,7 @@ void ShapesApp::Draw(const GameTimer& gt)
 	auto passCbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(mCbvHeap->GetGPUDescriptorHandleForHeapStart());
 	passCbvHandle.Offset(passCbvIndex, mCbvSrvUavDescriptorSize);
 	mCommandList->SetGraphicsRootDescriptorTable(1, passCbvHandle);
-
+	
 	//挨个绘制物体
 	DrawRenderItems(mCommandList, mOpaqueRitems);
 
@@ -430,7 +430,7 @@ void ShapesApp::BuildShapeGeometry()
 
 	auto totalVertexCount = box.Vertices.size() + grid.Vertices.size() + sphere.Vertices.size() + cylinder.Vertices.size();
 
-	std::vector<Vertex> vertices(totalVertexCount);
+	std::vector<VertexWithColor> vertices(totalVertexCount);
 
 	UINT k = 0;
 	for (size_t i = 0; i < box.Vertices.size(); ++i, ++k)
@@ -638,7 +638,7 @@ void ShapesApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::v
 		UINT cbvIndex = mCurrFrameResourceIndex * (UINT)mOpaqueRitems.size() + ri->ObjCBIndex;
 		auto cbvHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(mCbvHeap->GetGPUDescriptorHandleForHeapStart());
 		cbvHandle.Offset(cbvIndex, mCbvSrvUavDescriptorSize);
-
+		
 		cmdList->SetGraphicsRootDescriptorTable(0, cbvHandle);
 		cmdList->DrawIndexedInstanced(ri->IndexCount, 1, ri->StartIndexLocation, ri->BaseVertexLocation, 0);
 	}
