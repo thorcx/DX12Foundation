@@ -331,7 +331,7 @@ void ShapeWithLightApp::BuildConstantBufferViews()
 		}
 	}
 
-	UINT passCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(PassConstans));
+	UINT passCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(PassConstants));
 	for (int frameIndex = 0; frameIndex < gNumFrameResources; ++frameIndex)
 	{
 		auto passCBGPUResource = mFrameResources[frameIndex]->PassCB->Resource();

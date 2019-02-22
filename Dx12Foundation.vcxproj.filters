@@ -52,6 +52,9 @@
     <Filter Include="ThorLib\Pointer">
       <UniqueIdentifier>{b20e1e37-8d02-4ed4-b2fc-f8b709c238b1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\CreateWithTexApp">
+      <UniqueIdentifier>{4cea1ac7-e9d7-4c4e-8bf9-a8ad382eb501}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common\Camera.h">
@@ -117,6 +120,9 @@
     <ClInclude Include="ThorLib\Pointer\TxRefPtr.h">
       <Filter>ThorLib\Pointer</Filter>
     </ClInclude>
+    <ClInclude Include="Apps\CreateWithTex\CrateWithTexApp.h">
+      <Filter>Source Files\CreateWithTexApp</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common\Camera.cpp">
@@ -160,6 +166,9 @@
     </ClCompile>
     <ClCompile Include="Apps\ShapeWithLightAPP\ShapeWithLightApp.cpp">
       <Filter>Source Files\ShapeWithLightApp</Filter>
+    </ClCompile>
+    <ClCompile Include="Apps\CreateWithTex\CrateWithTexApp.cpp">
+      <Filter>Source Files\CreateWithTexApp</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

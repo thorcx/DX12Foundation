@@ -83,7 +83,7 @@ private:
 
 	std::vector<RenderItem*> mOpaqueRitems;
 
-	PassConstans mMainPassCB;
+	PassConstants mMainPassCB;
 
 	UINT mPassCbvOffset = 0;
 
