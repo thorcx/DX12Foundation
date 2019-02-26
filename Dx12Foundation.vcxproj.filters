@@ -123,6 +123,9 @@
     <ClInclude Include="Apps\CreateWithTex\CrateWithTexApp.h">
       <Filter>Source Files\CreateWithTexApp</Filter>
     </ClInclude>
+    <ClInclude Include="Apps\CreateWithTex\Waves.h">
+      <Filter>Source Files\CreateWithTexApp</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common\Camera.cpp">
@@ -168,6 +171,9 @@
       <Filter>Source Files\ShapeWithLightApp</Filter>
     </ClCompile>
     <ClCompile Include="Apps\CreateWithTex\CrateWithTexApp.cpp">
+      <Filter>Source Files\CreateWithTexApp</Filter>
+    </ClCompile>
+    <ClCompile Include="Apps\CreateWithTex\Waves.cpp">
       <Filter>Source Files\CreateWithTexApp</Filter>
     </ClCompile>
   </ItemGroup>

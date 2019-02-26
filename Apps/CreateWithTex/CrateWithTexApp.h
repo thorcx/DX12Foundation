@@ -3,8 +3,13 @@
 #include "../../Common/d3dApp.h"
 #include "../../Common/FrameResource.h"
 #include "../../ThorLib/Pointer/TxRefPtr.h"
+#include "Waves.h"
 
-
+enum class RenderLayer : int
+{
+	Opaque = 0,
+	Count
+};
 
 class CrateWithTexApp :public D3DApp
 {
@@ -54,6 +59,8 @@ private:
 	void UpdateObjectCBs(const GameTimer& gt);
 	void UpdateMaterialCBs(const GameTimer& gt);
 	void UpdateMainPassCB(const GameTimer& gt);
+	void UpdateWaves(const GameTimer &gt);
+
 
 	void LoadTextures();
 	void BuildDescriptorHeaps();
@@ -64,6 +71,11 @@ private:
 	void BuildRenderItems();
 	void BuildFrameResources();
 	void BuildPSOs();
+	void BuildLandGeometry();
+	void BuildWavesGeometry();
+
+	float GetHillsHeight(float x, float z) const;
+	DirectX::XMFLOAT3 GetHillsNormal(float x, float z) const;
 
 	void DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems);
 
@@ -77,7 +89,15 @@ private:
 	ThorcxLib::TRefCountPtr<ID3D12PipelineState>	mOpaquePSO = nullptr;
 
 	std::vector<RenderItem*> mOpaqueRitems;
+	std::vector<std::unique_ptr<RenderItem>>	mAllRitems;
 	std::vector<std::unique_ptr<FrameResource>>	mFrameResources;
+
+	RenderItem* mWavesRitem = nullptr;
+
+
+	//Render items divided by PSO
+	std::vector<RenderItem*>	mRitemLayer[(int)RenderLayer::Count];
+	std::unique_ptr<Waves>		mWaves;
 
 	FrameResource* mCurrFrameResource = nullptr;
 	int mCurrFrameResourceIndex = 0;
