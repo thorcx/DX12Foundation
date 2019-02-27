@@ -8,6 +8,8 @@
 enum class RenderLayer : int
 {
 	Opaque = 0,
+	Transparent,
+	AlphaTested,
 	Count
 };
 
@@ -92,6 +94,7 @@ private:
 	std::vector<std::unique_ptr<RenderItem>>	mAllRitems;
 	std::vector<std::unique_ptr<FrameResource>>	mFrameResources;
 
+
 	RenderItem* mWavesRitem = nullptr;
 
 
@@ -104,11 +107,13 @@ private:
 
 	std::vector<D3D12_INPUT_ELEMENT_DESC>	mInputLayout;
 
-	std::unordered_map<std::string, std::unique_ptr<MeshGeometry>> mGeometries;
-	std::unordered_map<std::string, std::unique_ptr<Material>>	   mMaterials;
+	std::unordered_map<std::string, std::unique_ptr<MeshGeometry>>				mGeometries;
+	std::unordered_map<std::string, std::unique_ptr<Material>>					mMaterials;
 	std::unordered_map<std::string, Microsoft::WRL::ComPtr<ID3DBlob>>			mShaders;
 
-	std::unordered_map<std::string, std::unique_ptr<Texture>> mTextures;
+	std::unordered_map<std::string, std::unique_ptr<Texture>>					mTextures;
+
+	std::unordered_map<std::string, ThorcxLib::TRefCountPtr<ID3D12PipelineState>> mPSOs;
 
 
 

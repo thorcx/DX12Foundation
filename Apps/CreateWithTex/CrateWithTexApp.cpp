@@ -94,7 +94,7 @@ void CrateWithTexApp::Draw(const GameTimer& gt)
 
 	ThrowIfFailed(cmdListAlloc->Reset());
 
-	ThrowIfFailed(mCommandList->Reset(cmdListAlloc, mOpaquePSO));
+	ThrowIfFailed(mCommandList->Reset(cmdListAlloc, mPSOs["opaque"]));
 
 	mCommandList->RSSetViewports(1, &mScreenViewport);
 	mCommandList->RSSetScissorRects(1, &mScissorRect);
@@ -102,7 +102,7 @@ void CrateWithTexApp::Draw(const GameTimer& gt)
 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
 		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
-	mCommandList->ClearRenderTargetView(CurrentBackBufferView(), Colors::LightSteelBlue, 0, nullptr);
+	mCommandList->ClearRenderTargetView(CurrentBackBufferView(), (float*)&mMainPassCB.FogColor, 0, nullptr);
 	mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f,
 		0, 0, nullptr);
 
@@ -116,6 +116,12 @@ void CrateWithTexApp::Draw(const GameTimer& gt)
 	mCommandList->SetGraphicsRootConstantBufferView(2, passCB->GetGPUVirtualAddress());
 
 	DrawRenderItems(mCommandList, mRitemLayer[(int)RenderLayer::Opaque]);
+
+	mCommandList->SetPipelineState(mPSOs["alphaTested"]);
+	DrawRenderItems(mCommandList, mRitemLayer[(int)RenderLayer::AlphaTested]);
+
+	mCommandList->SetPipelineState(mPSOs["transparent"]);
+	DrawRenderItems(mCommandList, mRitemLayer[(int)RenderLayer::Transparent]);
 
 	mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
@@ -208,8 +214,8 @@ void CrateWithTexApp::AnimateMaterials(const GameTimer& gt)
 	if (tv >= 1.0f)
 		tv -= 1.0f;
 
-	waterMat->MatTransform(3, 0) = tu;
-	waterMat->MatTransform(3, 1) = tv;
+	//waterMat->MatTransform(3, 0) = tu;
+	//waterMat->MatTransform(3, 1) = tv;
 
 	waterMat->NumFramesDirty = gNumFrameResources;
 }
@@ -353,7 +359,7 @@ void CrateWithTexApp::LoadTextures()
 
 	std::unique_ptr<Texture> woodCrateTex = std::make_unique<Texture>();
 	woodCrateTex->Name = "woodCrateTex";
-	woodCrateTex->Filename = L"./Textures/WoodCrate01.dds";
+	woodCrateTex->Filename = L"./Textures/WireFence.dds";
 	ThrowIfFailed(DirectX::CreateDDSTextureFromFile12(md3dDevice, mCommandList, woodCrateTex->Filename.c_str(),
 		woodCrateTex->Resource, woodCrateTex->UploadHeap));
 
@@ -436,9 +442,27 @@ void CrateWithTexApp::BuildRootSignature()
 
 void CrateWithTexApp::BuildShaderAndInputLayout()
 {
+
+	const D3D_SHADER_MACRO defines[] = 
+	{
+		"FOG", "1",
+		NULL, NULL
+	};
+
+	const D3D_SHADER_MACRO alphaTestDefines [] = 
+	{
+		"FOG", "1",
+		"ALPHA_TEST", "1",
+		NULL, NULL
+	};
+
 	mShaders["StandardVS"] = d3dUtil::CompileShader(L"Apps/CreateWithTex/MainPass.hlsl", nullptr, "VS", "vs_5_0");
-	mShaders["StandardPS"] = d3dUtil::CompileShader(L"Apps/CreateWithTex/MainPass.hlsl", nullptr, "PS", "ps_5_0");
-	
+	//mShaders["StandardPS"] = d3dUtil::CompileShader(L"Apps/CreateWithTex/MainPass.hlsl", nullptr, "PS", "ps_5_0");
+	mShaders["opaquePS"] = d3dUtil::CompileShader(L"Apps/CreateWithTex/MainPass.hlsl", defines, "PS", "ps_5_0");
+	mShaders["alphaTestedPS"] = d3dUtil::CompileShader(L"Apps/CreateWithTex/MainPass.hlsl", alphaTestDefines, "PS", "ps_5_0");
+
+
+
 	mInputLayout = {
 		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
 		{"NORMAL",  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
@@ -505,7 +529,7 @@ void CrateWithTexApp::BuildMaterials()
 	water->Name = "water";
 	water->MatCBIndex = 1;
 	water->DiffuseSrvHeapIndex = 1;
-	water->DiffuseAlbedo = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	water->DiffuseAlbedo = XMFLOAT4(1.0f, 1.0f, 1.0f, 0.5f);
 	water->FresnelR0 = XMFLOAT3(0.2f, 0.2f, 0.2f);
 	water->Roughness = 0.0f;
 
@@ -536,7 +560,7 @@ void CrateWithTexApp::BuildRenderItems()
 	wavesRitem->BaseVertexLocation = wavesRitem->Geo->DrawArgs["grid"].BaseVertexLocation;
 
 	mWavesRitem = wavesRitem.get();
-	mRitemLayer[(int)RenderLayer::Opaque].push_back(wavesRitem.get());
+	mRitemLayer[(int)RenderLayer::Transparent].push_back(wavesRitem.get());
 
 	auto gridRitem = std::make_unique<RenderItem>();
 	gridRitem->World = MathHelper::Identity4x4();
@@ -563,7 +587,7 @@ void CrateWithTexApp::BuildRenderItems()
 	boxRitem->StartIndexLocation = boxRitem->Geo->DrawArgs["box"].StartIndexLocation;
 	boxRitem->BaseVertexLocation = boxRitem->Geo->DrawArgs["box"].BaseVertexLocation;
 
-	mRitemLayer[(int)RenderLayer::Opaque].push_back(boxRitem.get());
+	mRitemLayer[(int)RenderLayer::AlphaTested].push_back(boxRitem.get());
 
 	mAllRitems.push_back(move(wavesRitem));
 	mAllRitems.push_back(move(gridRitem));
@@ -593,8 +617,8 @@ void CrateWithTexApp::BuildPSOs()
 	};
 	opaquePsoDesc.PS =
 	{
-		reinterpret_cast<BYTE*>(mShaders["StandardPS"]->GetBufferPointer()),
-		mShaders["StandardPS"]->GetBufferSize()
+		reinterpret_cast<BYTE*>(mShaders["opaquePS"]->GetBufferPointer()),
+		mShaders["opaquePS"]->GetBufferSize()
 	};
 	opaquePsoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	opaquePsoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
@@ -606,7 +630,35 @@ void CrateWithTexApp::BuildPSOs()
 	opaquePsoDesc.SampleDesc.Count = m4xMsaaState ? 4 : 1;
 	opaquePsoDesc.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
 	opaquePsoDesc.DSVFormat = mDepthStencilFormat;
-	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(mOpaquePSO.GetInitReference())));
+	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(mPSOs["opaque"].GetInitReference())));
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC transparentPsoDesc = opaquePsoDesc;
+
+	D3D12_RENDER_TARGET_BLEND_DESC transparencyBlendDesc;
+	transparencyBlendDesc.BlendEnable		= true;
+	transparencyBlendDesc.LogicOpEnable		= false;
+	transparencyBlendDesc.SrcBlend			= D3D12_BLEND_SRC_ALPHA;
+	transparencyBlendDesc.DestBlend			= D3D12_BLEND_INV_SRC_ALPHA;
+	transparencyBlendDesc.BlendOp			= D3D12_BLEND_OP_ADD;
+	transparencyBlendDesc.SrcBlendAlpha		= D3D12_BLEND_ONE;
+	transparencyBlendDesc.DestBlendAlpha	= D3D12_BLEND_ZERO;
+	transparencyBlendDesc.BlendOpAlpha		= D3D12_BLEND_OP_ADD;
+	transparencyBlendDesc.LogicOp			= D3D12_LOGIC_OP_NOOP;
+	transparencyBlendDesc.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+	transparentPsoDesc.BlendState.RenderTarget[0] = transparencyBlendDesc;
+	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&transparentPsoDesc, IID_PPV_ARGS(mPSOs["transparent"].GetInitReference())));
+
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC alphaTestedPsoDesc = opaquePsoDesc;
+	alphaTestedPsoDesc.PS =
+	{
+		reinterpret_cast<BYTE*>(mShaders["alphaTestedPS"]->GetBufferPointer()),
+		mShaders["alphaTestedPS"]->GetBufferSize()
+	};
+	alphaTestedPsoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+	ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&alphaTestedPsoDesc, IID_PPV_ARGS(mPSOs["alphaTested"].GetInitReference())));
+
 }
 
 void CrateWithTexApp::BuildLandGeometry()

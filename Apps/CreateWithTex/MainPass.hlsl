@@ -55,6 +55,12 @@ cbuffer cbPass : register(b1)
     float gDeltaTime;
     float4 gAmbientLight;
 
+
+	float4 gFogColor;
+	float  gFogStart;
+	float  gFogRange;
+	float2 cbPerObjectPad2;
+
     // Indices [0, NUM_DIR_LIGHTS) are directional lights;
     // indices [NUM_DIR_LIGHTS, NUM_DIR_LIGHTS+NUM_POINT_LIGHTS) are point lights;
     // indices [NUM_DIR_LIGHTS+NUM_POINT_LIGHTS, NUM_DIR_LIGHTS+NUM_POINT_LIGHT+NUM_SPOT_LIGHTS)
@@ -108,7 +114,14 @@ VertexOut VS(VertexIn vin)
 
 float4 PS(VertexOut pin) : SV_Target
 {
-    float4 diffuseAlbedo = gDiffuseMap.Sample(gsamLinearWarp, pin.TexC) * gDiffuseAlbedo;
+    float4 diffuseAlbedo = gDiffuseMap.Sample(gsamAnisotropicWrap, pin.TexC) * gDiffuseAlbedo;
+
+#ifdef ALPHA_TEST
+	// Discard pixel if texture alpha < 0.1.  We do this test as soon 
+	// as possible in the shader so that we can potentially exit the
+	// shader early, thereby skipping the rest of the shader code.
+	clip(diffuseAlbedo.a - 0.1f);
+#endif
 
     // Interpolating normal can unnormalize it, so renormalize it.
     pin.NormalW = normalize(pin.NormalW);
@@ -126,6 +139,12 @@ float4 PS(VertexOut pin) : SV_Target
         pin.NormalW, toEyeW, shadowFactor);
 
     float4 litColor = ambient + directLight;
+
+#ifdef FOG
+	float distToEye = length(gEyePosW - pin.PosW);
+	float fogAmount = saturate((distToEye - gFogStart) / gFogRange);
+	litColor = lerp(litColor, gFogColor, fogAmount);
+#endif
 
     // Common convention to take alpha from diffuse material.
     litColor.a = diffuseAlbedo.a;
