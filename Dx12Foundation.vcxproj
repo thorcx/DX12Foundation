@@ -148,6 +148,7 @@
     <ClInclude Include="Apps\CreateWithTex\CrateWithTexApp.h" />
     <ClInclude Include="Apps\CreateWithTex\Waves.h" />
     <ClInclude Include="Apps\ShapeWithLightAPP\ShapeWithLightApp.h" />
+    <ClInclude Include="Apps\StencilMirrorAndShadow\StencilMirror.h" />
     <ClInclude Include="Common\Camera.h" />
     <ClInclude Include="Common\d3dApp.h" />
     <ClInclude Include="Common\d3dUtil.h" />
@@ -173,6 +174,7 @@
     <ClCompile Include="Apps\CreateWithTex\CrateWithTexApp.cpp" />
     <ClCompile Include="Apps\CreateWithTex\Waves.cpp" />
     <ClCompile Include="Apps\ShapeWithLightAPP\ShapeWithLightApp.cpp" />
+    <ClCompile Include="Apps\StencilMirrorAndShadow\StencilMirror.cpp" />
     <ClCompile Include="Common\Camera.cpp" />
     <ClCompile Include="Common\d3dApp.cpp" />
     <ClCompile Include="Common\d3dUtil.cpp" />

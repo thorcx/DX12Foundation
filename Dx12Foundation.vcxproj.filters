@@ -55,6 +55,9 @@
     <Filter Include="Source Files\CreateWithTexApp">
       <UniqueIdentifier>{4cea1ac7-e9d7-4c4e-8bf9-a8ad382eb501}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\StencilMirror">
+      <UniqueIdentifier>{c7b9d715-cce4-4479-834e-e788297541fe}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common\Camera.h">
@@ -126,6 +129,9 @@
     <ClInclude Include="Apps\CreateWithTex\Waves.h">
       <Filter>Source Files\CreateWithTexApp</Filter>
     </ClInclude>
+    <ClInclude Include="Apps\StencilMirrorAndShadow\StencilMirror.h">
+      <Filter>Source Files\StencilMirror</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common\Camera.cpp">
@@ -175,6 +181,9 @@
     </ClCompile>
     <ClCompile Include="Apps\CreateWithTex\Waves.cpp">
       <Filter>Source Files\CreateWithTexApp</Filter>
+    </ClCompile>
+    <ClCompile Include="Apps\StencilMirrorAndShadow\StencilMirror.cpp">
+      <Filter>Source Files\StencilMirror</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

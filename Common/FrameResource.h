@@ -49,6 +49,10 @@ struct VertexWithColor
 
 struct VertexWithTex
 {
+	VertexWithTex() = default;
+	VertexWithTex(float x, float y, float z, float nx, float ny, float nz, float u, float v)
+		:Pos(x, y, z), Normal(nx, ny, nz), Texcoord(u, v) {}
+
 	DirectX::XMFLOAT3	Pos;
 	DirectX::XMFLOAT3	Normal;
 	DirectX::XMFLOAT2	Texcoord;

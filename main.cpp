@@ -1,7 +1,7 @@
 //#include "Apps/ShapeApp/ShapeApp.h"
 //#include "Apps/ShapeWithLightApp/ShapeWithLightApp.h"
 
-#include "Apps/CreateWithTex/CrateWithTexApp.h"
+#include "Apps/StencilMirrorAndShadow/StencilMirror.h"
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance,
 	PSTR cmdLine, int showCmd)
@@ -15,7 +15,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance,
 	{
 		//ShapesApp theApp(hInstance);
 		//ShapeWithLightApp theApp(hInstance);
-		CrateWithTexApp theApp(hInstance);
+		StencilMirror::StencilMirrorApp theApp(hInstance);
 		
 		if (!theApp.Initialize())
 			return 0;
